@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1100" width="100%" height="100%">
+  <!-- Paper background -->
+  <rect width="800" height="1100" fill="#fcfbf9" />
+  <rect width="800" height="1100" fill="none" stroke="#dedad0" stroke-width="2" />
+
+  <!-- Highlight box for illegal deposit -->
+  <rect x="55" y="270" width="690" height="90" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2" rx="4" />
+  <text x="60" y="260" font-family="sans-serif" font-size="11" font-weight="bold" fill="#dc2626">⚠️ ILLEGAL UNDER CAL. CIV. CODE § 1950.5 (Non-refundable deposit &amp; over 1-month rent cap)</text>
+
+  <!-- Highlight box for jury waiver -->
+  <rect x="55" y="440" width="690" height="85" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2" rx="4" />
+  <text x="60" y="430" font-family="sans-serif" font-size="11" font-weight="bold" fill="#dc2626">⚠️ UNENFORCEABLE: Pre-Dispute Jury Waiver (Grafton Partners v. Superior Court)</text>
+
+  <!-- Text -->
+  <g font-family="Times New Roman, serif" fill="#1e293b">
+    <text x="400" y="70" font-size="18" font-weight="bold" text-anchor="middle">CALIFORNIA RESIDENTIAL LEASE AGREEMENT</text>
+    <text x="400" y="95" font-size="12" text-anchor="middle" fill="#64748b">STANDARD FORM MULTI-FAMILY HOUSING (SANTA MONICA JURISDICTION)</text>
+    <line x1="60" y1="115" x2="740" y2="115" stroke="#cbd5e1" stroke-width="1" />
+
+    <text x="65" y="150" font-size="12"><tspan font-weight="bold">OWNER / AGENT:</tspan> Pacific Horizon Properties LLC</text>
+    <text x="65" y="175" font-size="12"><tspan font-weight="bold">RESIDENT / TENANT:</tspan> Elena Vasquez</text>
+    <text x="65" y="200" font-size="12"><tspan font-weight="bold">PREMISES:</tspan> 1420 Ocean Avenue, Apt 12, Santa Monica, CA 90401</text>
+    <text x="65" y="225" font-size="12"><tspan font-weight="bold">MONTHLY RENT:</tspan> $2,800.00 / month, payable on the 1st day of each month</text>
+
+    <!-- Section 4 -->
+    <text x="65" y="295" font-size="12" font-weight="bold">SECTION 4. SECURITY DEPOSIT AND NON-REFUNDABLE CHARGES:</text>
+    <text x="65" y="320" font-size="12">Resident shall deposit the sum of $5,600.00 (two months rent) as security deposit.</text>
+    <text x="65" y="340" font-size="12">In addition, Resident shall pay an upfront non-refundable cleaning surcharge of $800.00.</text>
+
+    <!-- Section 11 -->
+    <text x="65" y="465" font-size="12" font-weight="bold">SECTION 11. WAIVER OF RIGHT TO JURY TRIAL &amp; MANDATORY ARBITRATION:</text>
+    <text x="65" y="490" font-size="12">Resident knowingly, voluntarily, and irrevocably waives all constitutional and statutory</text>
+    <text x="65" y="510" font-size="12">rights to a trial by jury in any action or proceeding arising out of this Tenancy.</text>
+
+    <!-- Section 16 -->
+    <text x="65" y="580" font-size="12" font-weight="bold">SECTION 16. ACCESS AND INSPECTION BY OWNER:</text>
+    <text x="65" y="605" font-size="12">Owner reserves the unrestricted right to enter the dwelling unit at any time without</text>
+    <text x="65" y="625" font-size="12">written 24-hour advance notice for general inspections or showings.</text>
+
+    <text x="65" y="700" font-size="12">Dated: August 1, 2026</text>
+    <text x="65" y="725" font-size="12">Santa Monica, California</text>
+
+    <line x1="450" y1="740" x2="720" y2="740" stroke="#111827" stroke-width="1" />
+    <text x="450" y="760" font-size="12">PACIFIC HORIZON PROPERTIES LLC</text>
+  </g>
+</svg>

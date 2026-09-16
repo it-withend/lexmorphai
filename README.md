@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LexMorph AI
 
-## Getting Started
+**LexHack 2026** · Access to Justice & Civic Tech
 
-First, run the development server:
+Turn a phone photo of an eviction notice, lease, or summons into an **editable living document**, flag statutory defects in plain English, generate a court-ready Answer, and practice oral argument in a hearing simulator.
+
+> Not legal advice. Educational prototype for pro se awareness.
+
+## Demo path (90 seconds)
+
+1. Open `/studio`
+2. Click **NYC Eviction Notice** (works offline, no API keys)
+3. Click red flags → **Generate Official Court Answer** → download `.docx`
+4. Open `/simulator` and try a quick defense
+
+## Photo → editable document (no paid Gemini)
+
+Google Gemini free keys often fail without billing. LexMorph uses a **free-first** pipeline:
+
+1. **On-device OCR** (`tesseract.js`) — extracts text in the browser
+2. **Groq vision / text** (optional free key from [console.groq.com/keys](https://console.groq.com/keys))
+3. **Statutory rules engine** (`src/lib/legal-rules.ts`) — deterministic NY / CA / FDCPA triggers
+4. Gemini only if you already have a working key
+
+Editable export is **native Word (.docx)**. Use **Print / Save PDF** in the browser for a PDF copy of the reconstructed page.
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local
+# optional:
+# GROQ_API_KEY=gsk_...
+# GEMINI_API_KEY=AIza...
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can also paste keys in the app navbar (**API Keys**) — stored only in your browser `localStorage`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech stack
 
-## Learn More
+- Next.js 16 · React 19 · TypeScript · Tailwind CSS 4
+- OCR: `tesseract.js` (client)
+- LLMs: Groq (`qwen/qwen3.6-27b` vision, `openai/gpt-oss-120b` text) · optional Gemini 2.5 Flash
+- Export: `docx`
+- Domain: DocumentAST + statutory knowledge base
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Purpose |
+|--------|---------|
+| `npm run dev` | Local development |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Repository
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+https://github.com/it-withend/lexmorphai

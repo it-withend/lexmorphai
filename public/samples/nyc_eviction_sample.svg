@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1100" width="100%" height="100%">
+  <defs>
+    <filter id="paper-texture" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDiffuseLighting in="noise" lighting-color="#fffdfa" surfaceScale="1.2" result="light">
+        <feDistantLight azimuth="45" elevation="60" />
+      </feDiffuseLighting>
+      <feBlend mode="multiply" in="SourceGraphic" in2="light" />
+    </filter>
+  </defs>
+
+  <!-- Paper background -->
+  <rect width="800" height="1100" fill="#fdfcf7" />
+  <rect width="800" height="1100" fill="none" stroke="#e2dfd2" stroke-width="2" />
+
+  <!-- Fold line shadows to give authentic scanned paper look -->
+  <line x1="0" y1="366" x2="800" y2="366" stroke="#000000" stroke-opacity="0.04" stroke-width="3" />
+  <line x1="0" y1="733" x2="800" y2="733" stroke="#000000" stroke-opacity="0.04" stroke-width="3" />
+
+  <!-- Red Flag Highlight 1 (Defective 3-Day Notice) -->
+  <rect x="55" y="470" width="690" height="75" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2" rx="4" />
+  <text x="60" y="462" font-family="sans-serif" font-size="11" font-weight="bold" fill="#dc2626">⚠️ CRITICAL DEFECT: NY RPAPL § 711 VIOLATION (3-Day vs 14-Day Mandatory Notice)</text>
+
+  <!-- Red Flag Highlight 2 (Illegal added rent) -->
+  <rect x="55" y="320" width="690" height="110" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,2" rx="4" />
+  <text x="60" y="312" font-family="sans-serif" font-size="11" font-weight="bold" fill="#d97706">⚠️ UNLAWFUL CLAUSE: Non-Rent Late Fees Surcharged as "Added Rent"</text>
+
+  <!-- Legal Caption Box -->
+  <g font-family="Times New Roman, serif" fill="#111827">
+    <text x="400" y="70" font-size="16" font-weight="bold" text-anchor="middle" letter-spacing="1">CIVIL COURT OF THE CITY OF NEW YORK</text>
+    <text x="400" y="92" font-size="13" font-weight="bold" text-anchor="middle">COUNTY OF KINGS : HOUSING PART</text>
+    
+    <line x1="60" y1="110" x2="740" y2="110" stroke="#111827" stroke-width="1.5" />
+
+    <!-- Caption Left / Right -->
+    <text x="65" y="135" font-size="13" font-weight="bold">METROPOLITAN REALTY HOLDINGS LLC,</text>
+    <text x="100" y="155" font-size="12" font-style="italic">Petitioner-Landlord,</text>
+    <text x="65" y="180" font-size="13" font-weight="bold">-against-</text>
+    <text x="65" y="205" font-size="13" font-weight="bold">MARCUS A. REYNOLDS,</text>
+    <text x="100" y="225" font-size="12" font-style="italic">Respondent-Tenant.</text>
+
+    <!-- Index Number Box -->
+    <text x="480" y="150" font-size="13" font-weight="bold">Index No. LT-304928-26/KI</text>
+    <text x="480" y="175" font-size="12">Premises: 742 Franklin Ave, Apt 4B</text>
+    <text x="480" y="195" font-size="12">Brooklyn, New York 11238</text>
+
+    <line x1="60" y1="245" x2="740" y2="245" stroke="#111827" stroke-width="1.5" />
+
+    <!-- Document Title -->
+    <text x="400" y="275" font-size="14" font-weight="bold" text-anchor="middle" letter-spacing="0.5">WRITTEN DEMAND FOR RENT &amp; NOTICE TO VACATE</text>
+
+    <!-- Body Text -->
+    <text x="65" y="345" font-size="12">PLEASE TAKE NOTICE that you are indebted to Petitioner for the following alleged rental arrears:</text>
+    
+    <!-- Table Mock -->
+    <text x="80" y="375" font-size="11" font-weight="bold">• July 2026 Base Rent: $2,200.00 + Late Charge ($150.00)</text>
+    <text x="80" y="395" font-size="11" font-weight="bold">• August 2026 Base Rent: $2,200.00 + Late Charge ($150.00)</text>
+    <text x="80" y="415" font-size="11" font-weight="bold">• Legal Prep &amp; Process Server Administrative Fee: $150.00 (Total: $4,850.00)</text>
+
+    <!-- Statutory Demand Paragraph -->
+    <text x="65" y="495" font-size="12" font-weight="bold">YOU ARE HEREBY REQUIRED TO PAY THE SUM OF $4,850.00 IN FULL WITHIN</text>
+    <text x="65" y="515" font-size="13" font-weight="bold" fill="#dc2626">THREE (3) DAYS OF THE DATE OF SERVICE HEREOF OR SURRENDER</text>
+    <text x="65" y="535" font-size="12">POSSESSION OF THE PREMISES TO THE PETITIONER-LANDLORD.</text>
+
+    <text x="65" y="580" font-size="12">Tenant further agrees that premises were received in "AS IS" condition and landlord</text>
+    <text x="65" y="600" font-size="12">shall bear no liability for water disruption, mold, or heat outages during occupancy.</text>
+
+    <!-- Signatures -->
+    <text x="65" y="680" font-size="12">Dated: September 10, 2026</text>
+    <text x="65" y="700" font-size="12">Brooklyn, New York</text>
+
+    <line x1="450" y1="720" x2="720" y2="720" stroke="#111827" stroke-width="1" />
+    <text x="450" y="740" font-size="12" font-weight="bold">ARTHUR STERLING, ESQ.</text>
+    <text x="450" y="758" font-size="11">Attorney for Petitioner-Landlord</text>
+    <text x="450" y="774" font-size="11">Wall Street Plaza, Suite 1400</text>
+    <text x="450" y="790" font-size="11">New York, NY 10005</text>
+  </g>
+
+  <!-- Official Red Stamp Mock -->
+  <g transform="translate(560, 830) rotate(-12)">
+    <rect width="180" height="85" fill="none" stroke="#b91c1c" stroke-width="3.5" rx="6" />
+    <rect width="170" height="75" x="5" y="5" fill="none" stroke="#b91c1c" stroke-width="1" rx="4" />
+    <text x="90" y="32" font-family="Impact, sans-serif" font-size="16" fill="#b91c1c" text-anchor="middle" letter-spacing="1">CIVIL MARSHAL</text>
+    <text x="90" y="52" font-family="sans-serif" font-size="10" font-weight="bold" fill="#b91c1c" text-anchor="middle">OFFICIAL SERVICE COPY</text>
+    <text x="90" y="68" font-family="sans-serif" font-size="9" fill="#b91c1c" text-anchor="middle">RECEIVED: SEP 10, 2026</text>
+  </g>
+</svg>
