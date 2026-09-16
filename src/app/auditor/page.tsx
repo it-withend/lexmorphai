@@ -42,6 +42,7 @@ export default function AdviceAuditorPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AdviceAuditResult | null>(null);
   const [source, setSource] = useState<string>('');
+  const [model, setModel] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
   const runAudit = async (sampleId?: string) => {
@@ -70,7 +71,8 @@ export default function AdviceAuditorPage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || 'Audit failed');
       setResult(data.result);
-      setSource(data.source);
+      setSource(data.source || '');
+      setModel(data.model || '');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Audit failed');
     } finally {
@@ -210,7 +212,12 @@ export default function AdviceAuditorPage() {
                   </div>
                   <p className="text-sm leading-relaxed opacity-95">{result.summary}</p>
                   {source && (
-                    <p className="text-[10px] mt-2 opacity-70 font-mono">source: {source}</p>
+                    <p className="text-[10px] mt-2 opacity-70 font-mono flex items-center gap-1.5">
+                      <Shield className="w-3 h-3" />
+                      {source === 'ai' || source === 'gemini' || source?.startsWith('groq')
+                        ? `Live AI · ${model || source}`
+                        : `Rules engine · ${source}${model ? ` · ${model}` : ''}`}
+                    </p>
                   )}
                 </div>
 

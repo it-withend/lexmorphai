@@ -2,18 +2,41 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Shield, Sparkles, Key, FileText, Scale, ExternalLink, CheckCircle, X } from 'lucide-react';
+import {
+  Shield,
+  Sparkles,
+  Key,
+  FileText,
+  Scale,
+  ExternalLink,
+  CheckCircle,
+  X,
+  Activity,
+} from 'lucide-react';
+
+type AiStatus = {
+  groq?: { configured?: boolean; live?: boolean; model?: string; error?: string };
+  tip?: string;
+};
 
 export default function Navbar() {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [geminiKey, setGeminiKey] = useState('');
   const [groqKey, setGroqKey] = useState('');
   const [isSaved, setIsSaved] = useState(false);
+  const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
 
   useEffect(() => {
     setGeminiKey(localStorage.getItem('lexmorph_gemini_key') || '');
     setGroqKey(localStorage.getItem('lexmorph_groq_key') || '');
   }, [showKeyModal]);
+
+  useEffect(() => {
+    fetch('/api/ai-status')
+      .then((r) => r.json())
+      .then((d) => setAiStatus(d))
+      .catch(() => setAiStatus(null));
+  }, []);
 
   const handleSaveKey = () => {
     if (geminiKey.trim()) localStorage.setItem('lexmorph_gemini_key', geminiKey.trim());
@@ -28,6 +51,9 @@ export default function Navbar() {
       setShowKeyModal(false);
     }, 1000);
   };
+
+  const groqLive = aiStatus?.groq?.live;
+  const groqConfigured = aiStatus?.groq?.configured;
 
   return (
     <>
@@ -50,10 +76,26 @@ export default function Navbar() {
               </div>
             </Link>
 
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Shield className="w-3 h-3" />
-              LexHack 2026 · Access to Justice
+              LexHack 2026 · A2J + AI Safety
             </div>
+
+            {aiStatus && (
+              <div
+                className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
+                  groqLive
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                    : groqConfigured
+                      ? 'bg-amber-500/10 text-amber-300 border-amber-500/25'
+                      : 'bg-slate-800/80 text-slate-400 border-slate-700'
+                }`}
+                title={aiStatus.tip || ''}
+              >
+                <Activity className="w-3 h-3" />
+                {groqLive ? 'Groq live' : groqConfigured ? 'Groq key issue' : 'Offline rules'}
+              </div>
+            )}
           </div>
 
           <nav className="flex items-center gap-1 sm:gap-2">
@@ -85,7 +127,7 @@ export default function Navbar() {
               id="open-api-keys"
               onClick={() => setShowKeyModal(true)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-slate-800 transition-all flex items-center gap-1.5"
-              title="Configure free AI keys"
+              title="Configure AI keys"
             >
               <Key className="w-3.5 h-3.5 text-amber-400" />
               <span className="hidden sm:inline">API Keys</span>
@@ -96,7 +138,7 @@ export default function Navbar() {
               className="ml-2 px-4 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Open Studio</span>
+              <span className="hidden sm:inline">Open Studio</span>
             </Link>
           </nav>
         </div>
@@ -110,23 +152,42 @@ export default function Navbar() {
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                   <Key className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-semibold text-white">AI Keys (optional)</h3>
+                <h3 className="text-base font-semibold text-white">AI Keys</h3>
               </div>
               <button onClick={() => setShowKeyModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-400 mb-5 leading-relaxed">
-              Photo analysis works offline with on-device OCR + statutory rules. A free{' '}
-              <strong className="text-emerald-400">Groq</strong> key unlocks stronger AI reconstruction without
-              Google billing. Gemini is optional if your Google key already has quota.
+            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+              Prefer <code className="text-emerald-400">GROQ_API_KEY</code> in Vercel → Environment Variables
+              (Production + Preview), then Redeploy. Browser keys below are optional for local testing.
+              Demo samples work offline without any key.
             </p>
+
+            {aiStatus && (
+              <div
+                className={`mb-4 p-3 rounded-xl text-xs border ${
+                  groqLive
+                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200'
+                    : 'bg-amber-500/10 border-amber-500/25 text-amber-100'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-semibold mb-1">
+                  <Activity className="w-3.5 h-3.5" />
+                  Server AI status
+                </div>
+                {aiStatus.tip}
+                {aiStatus.groq?.error && (
+                  <p className="mt-1 font-mono text-[10px] opacity-80">{aiStatus.groq.error}</p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Groq API key (recommended, free)</label>
+                  <label className="text-xs font-semibold text-slate-300">Groq API key (recommended)</label>
                   <a
                     href="https://console.groq.com/keys"
                     target="_blank"
@@ -141,7 +202,7 @@ export default function Navbar() {
                   placeholder="gsk_..."
                   value={groqKey}
                   onChange={(e) => setGroqKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
 
@@ -162,22 +223,22 @@ export default function Navbar() {
                   placeholder="AIzaSy..."
                   value={geminiKey}
                   onChange={(e) => setGeminiKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
 
               <div className="flex items-center justify-end pt-1">
                 <button
                   onClick={handleSaveKey}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs flex items-center gap-1.5"
                 >
                   {isSaved ? (
                     <>
                       <CheckCircle className="w-3.5 h-3.5" />
-                      <span>Saved</span>
+                      Saved
                     </>
                   ) : (
-                    <span>Save keys</span>
+                    'Save browser keys'
                   )}
                 </button>
               </div>

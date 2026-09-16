@@ -53,7 +53,7 @@ export default function RedFlagSidebar({
           type: 'ast',
           data: ast,
           filename: ast.originalImageUrl
-            ? 'lexmorph_visual_twin.docx'
+            ? 'lexmorph_living_document.docx'
             : 'reconstructed_legal_document.docx',
         }),
       });
@@ -63,7 +63,7 @@ export default function RedFlagSidebar({
       const a = document.createElement('a');
       a.href = url;
       a.download = ast.originalImageUrl
-        ? 'lexmorph_visual_twin.docx'
+        ? 'lexmorph_living_document.docx'
         : 'reconstructed_legal_document.docx';
       document.body.appendChild(a);
       a.click();

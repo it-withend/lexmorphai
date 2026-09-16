@@ -28,8 +28,8 @@ export const STATUTORY_KNOWLEDGE_BASE: StatutoryRule[] = [
       plainEnglishExplanation:
         'The landlord demands payment within 3 or 5 days, but New York law strictly requires an unequivocal written demand of at least 14 full days before any summary nonpayment proceeding can commence.',
       recommendedDefense: 'First Affirmative Defense: Lack of Subject Matter Jurisdiction due to Defective Statutory Notice.',
-      statutoryRemedy: 'Immediate dismissal of landlord petition with prejudice to the current proceeding.',
-      dismissalImpactPercentage: 95,
+      statutoryRemedy: 'Argue for dismissal of the current nonpayment petition for failure to serve a valid predicate notice under RPAPL § 711(2). Outcomes depend on the facts and the court.',
+      dismissalImpactPercentage: 78,
     }),
   },
   {

@@ -268,7 +268,8 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                     </button>
                   ) : (
                     <span className="px-3 py-1 bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs font-mono rounded-lg">
-                      DIGITALLY CERTIFIED ✓
+                      DIGITALLY CERTIFIED
+                      <CheckCircle2 className="w-3.5 h-3.5 inline ml-1" />
                     </span>
                   )}
                 </div>

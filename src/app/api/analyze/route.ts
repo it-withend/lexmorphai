@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     if (!imageBase64 && !rawText) {
       return NextResponse.json(
-        { success: false, error: 'Provide an image or OCR text to analyze.' },
+        { success: false, error: 'Provide document text to analyze, or open a curated demo sample.' },
         { status: 400 }
       );
     }
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       success: true,
       ast: result.ast,
       source: result.source,
+      model: result.model,
       warning: result.warning,
     });
   } catch (err: unknown) {

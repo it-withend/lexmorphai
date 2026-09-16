@@ -40,6 +40,8 @@ export default function HearingSimulator() {
   const [userInput, setUserInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [overallScore, setOverallScore] = useState(70);
+  const [aiEngine, setAiEngine] = useState<'unknown' | 'ai' | 'heuristic'>('unknown');
+  const [aiModel, setAiModel] = useState<string>('');
 
   useEffect(() => {
     const id = pickInitialScenarioId();
@@ -99,6 +101,9 @@ export default function HearingSimulator() {
 
       const data = await res.json();
       if (data.success) {
+        setAiEngine(data.source === 'ai' ? 'ai' : 'heuristic');
+        if (data.model) setAiModel(data.model);
+
         setTurns((prev) =>
           prev.map((t) =>
             t.id === userTurnId
@@ -178,6 +183,19 @@ export default function HearingSimulator() {
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">{scenario.title}</p>
+            {aiEngine !== 'unknown' && (
+              <p className="text-[11px] mt-1 flex items-center gap-1.5">
+                {aiEngine === 'ai' ? (
+                  <span className="text-emerald-400 font-semibold">
+                    Live AI judge{aiModel ? ` · ${aiModel}` : ''}
+                  </span>
+                ) : (
+                  <span className="text-amber-400 font-semibold">
+                    Offline coach (heuristic) — check Groq key /api/ai-status
+                  </span>
+                )}
+              </p>
+            )}
           </div>
         </div>
 

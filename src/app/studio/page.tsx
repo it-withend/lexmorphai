@@ -80,6 +80,7 @@ export default function StudioPage() {
   const [pasteText, setPasteText] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisSource, setAnalysisSource] = useState('sample');
+  const [analysisModel, setAnalysisModel] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const persistCaseForSimulator = (ast: DocumentAST) => {
@@ -123,6 +124,7 @@ export default function StudioPage() {
         if (!sample) throw new Error('Unknown sample');
         setCurrentAST(sample.ast);
         setAnalysisSource('sample');
+        setAnalysisModel('');
         persistCaseForSimulator(sample.ast);
       } else if (opts.rawText) {
         const keys = getStoredKeys();
@@ -148,6 +150,7 @@ export default function StudioPage() {
         };
         setCurrentAST(ast);
         setAnalysisSource(data.source || 'text_audit');
+        setAnalysisModel(data.model || '');
         persistCaseForSimulator(ast);
       }
     } catch (err) {
@@ -202,7 +205,7 @@ export default function StudioPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { Icon: BookOpen, title: '1. Pick or paste', body: 'Curated cases or your document text' },
-              { Icon: Wand2, title: '2. AI counter-attack', body: 'Red flags + Verified Answer .docx' },
+              { Icon: Wand2, title: '2. AI counter-attack', body: 'Red flags + court Answer .docx' },
               { Icon: Scale, title: '3. Hearing coach', body: 'Practice oral argument with scoring' },
             ].map(({ Icon, title, body }) => (
               <div key={title} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 flex gap-3">
@@ -308,7 +311,7 @@ export default function StudioPage() {
                   {s.jurisdiction}
                 </p>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-emerald-400 font-semibold">{s.score}% dismissal chance</span>
+                  <span className="text-xs text-emerald-400 font-semibold">{s.score}% defense viability</span>
                   <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
                 </div>
               </button>
@@ -384,9 +387,25 @@ export default function StudioPage() {
                 <FileText className="w-4 h-4 text-emerald-400" />
                 {currentAST.title}
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {currentAST.jurisdiction} · {currentAST.defects.length} defects ·{' '}
-                <span className="text-cyan-400/90">{analysisSource}</span>
+              <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>
+                  {currentAST.jurisdiction} · {currentAST.defects.length} defects
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                    analysisSource === 'sample'
+                      ? 'bg-slate-800 text-slate-300 border-slate-700'
+                      : analysisSource.includes('groq') || analysisSource === 'gemini'
+                        ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
+                        : 'bg-amber-500/10 text-amber-200 border-amber-500/25'
+                  }`}
+                >
+                  {analysisSource === 'sample'
+                    ? 'Curated demo (offline fixtures)'
+                    : analysisSource.includes('groq') || analysisSource === 'gemini'
+                      ? `Live AI · ${analysisModel || analysisSource}`
+                      : `Rules · ${analysisSource}${analysisModel ? ` · ${analysisModel}` : ''}`}
+                </span>
               </p>
             </div>
           </div>

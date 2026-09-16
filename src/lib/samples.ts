@@ -115,8 +115,8 @@ export const SAMPLE_CASES: SampleCase[] = [
           plainEnglishExplanation:
             'Under New York law, landlords can NO LONGER demand rent in 3 days. The law strictly requires an unequivocal written demand giving at least FOURTEEN (14) full days. Demanding payment in 3 days renders this notice completely void.',
           recommendedDefense: 'First Affirmative Defense: Lack of Subject Matter Jurisdiction Due to Defective Predicate Notice.',
-          statutoryRemedy: 'Immediate dismissal of the non-payment petition with prejudice to this proceeding.',
-          dismissalImpactPercentage: 98,
+          statutoryRemedy: 'Move to dismiss the nonpayment petition for defective predicate notice under RPAPL § 711(2). Educational framing only — a court decides.',
+          dismissalImpactPercentage: 80,
         },
         {
           id: 'defect-illegal-added-rent',
@@ -228,7 +228,7 @@ export const SAMPLE_CASES: SampleCase[] = [
         },
       ],
       demandForRelief: [
-        '1. Immediate dismissal of the Petition with prejudice pursuant to RPAPL § 711(2);',
+        '1. Dismissal of the Petition for failure to serve a valid 14-day rent demand under RPAPL § 711(2);',
         '2. An award of full rent abatement for Petitioner\'s breach of the warranty of habitability in the amount of $2,200.00;',
         '3. An order directing Petitioner to immediately repair all outstanding Housing Maintenance Code violations;',
         '4. Such other and further relief as the Court deems just and proper.',

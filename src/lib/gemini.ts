@@ -1,19 +1,21 @@
 /**
  * LexMorph AI — Unified LLM Router
- *
- * Free-first pipeline for photo → editable document:
- * 1) Gemini vision (optional — often needs Google billing)
- * 2) Groq vision qwen/qwen3.6-27b (free tier, multimodal)
- * 3) Groq text on OCR (free)
- * 4) Local OCR text + statutory rules (zero cloud keys)
+ * Primary free path: Groq (gpt-oss / qwen3.8). Gemini optional.
  */
 
 import { GoogleGenAI } from '@google/genai';
-import Groq from 'groq-sdk';
 import { DocumentAST } from './types';
 import { SAMPLE_CASES } from './samples';
 import { enrichAstWithRules } from './apply-rules';
 import { buildAstFromOcrText } from './ocr-ast';
+import {
+  cleanJson,
+  getServerGeminiKey,
+  getServerGroqKey,
+  groqChatJson,
+  GROQ_TEXT_MODELS,
+  GROQ_VISION_MODELS,
+} from './groq';
 
 function hasCyrillic(text: string): boolean {
   return /[\u0400-\u04FF]/.test(text);
@@ -68,18 +70,11 @@ export interface AnalysisResult {
   ast: DocumentAST;
   source: AnalysisSource;
   warning?: string;
+  model?: string;
 }
 
-const GROQ_TEXT_MODEL = 'openai/gpt-oss-120b';
-const GROQ_VISION_MODEL = 'qwen/qwen3.6-27b';
-const GROQ_TEXT_FALLBACKS = ['qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'llama-3.3-70b-versatile'];
-
-function cleanJson(text: string): string {
-  return text
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
+function cleanLocalJson(text: string): string {
+  return cleanJson(text);
 }
 
 export async function analyzeLegalDocument(
@@ -88,12 +83,57 @@ export async function analyzeLegalDocument(
   apiKey?: string,
   groqApiKey?: string
 ): Promise<AnalysisResult> {
-  const geminiKey = apiKey || process.env.GEMINI_API_KEY;
-  const groqKey = groqApiKey || process.env.GROQ_API_KEY;
+  const geminiKey = getServerGeminiKey(apiKey);
+  const groqKey = getServerGroqKey(groqApiKey);
   const analysisPrompt = buildAnalysisPrompt();
   const warnings: string[] = [];
+  const ocrIsCyrillic = Boolean(rawText && hasCyrillic(rawText));
 
-  // 1) Gemini vision (optional)
+  // 1) Groq text analysis first (primary free path on Vercel)
+  if (groqKey && rawText && rawText.length > 20) {
+    try {
+      const { text, model } = await groqChatJson({
+        apiKey: groqKey,
+        system:
+          'You are LexMorph AI, a legal document analyst. Preserve original language. Output only valid DocumentAST JSON.',
+        user: `Analyze this legal document text and return DocumentAST JSON.\n\nDOCUMENT:\n${rawText.slice(0, 12000)}\n\n${analysisPrompt}`,
+        models: GROQ_TEXT_MODELS,
+        temperature: 0.15,
+      });
+      const ast = sanitizeAst(JSON.parse(text) as DocumentAST, rawText, imageDataUrl);
+      return { ast, source: 'groq-text', model, warning: warnings[0] };
+    } catch (e) {
+      console.warn('[LexMorph] Groq text failed:', e);
+      warnings.push(`Groq text failed: ${e instanceof Error ? e.message : 'unknown'}`);
+    }
+  }
+
+  // 2) Groq vision (image, non-Cyrillic)
+  if (groqKey && imageDataUrl?.startsWith('data:') && !ocrIsCyrillic) {
+    try {
+      const userText = rawText
+        ? `OCR hint:\n${rawText.slice(0, 4000)}\n\n${analysisPrompt}`
+        : analysisPrompt;
+      const { text, model } = await groqChatJson({
+        apiKey: groqKey,
+        system:
+          'You are LexMorph AI. Reconstruct documents faithfully. NEVER translate. NEVER invent court captions. Output only valid JSON.',
+        user: [
+          { type: 'text', text: userText },
+          { type: 'image_url', image_url: { url: imageDataUrl } },
+        ],
+        models: GROQ_VISION_MODELS,
+        temperature: 0.1,
+      });
+      const ast = sanitizeAst(JSON.parse(text) as DocumentAST, rawText, imageDataUrl);
+      return { ast, source: 'groq-vision', model, warning: warnings[0] };
+    } catch (e) {
+      console.warn('[LexMorph] Groq vision failed:', e);
+      warnings.push('Groq vision failed — trying Gemini / rules.');
+    }
+  }
+
+  // 3) Gemini (optional / billing-dependent)
   if (geminiKey) {
     try {
       const ai = new GoogleGenAI({ apiKey: geminiKey });
@@ -107,7 +147,7 @@ export async function analyzeLegalDocument(
         contents.push({ inlineData: { mimeType, data: base64Data } });
       }
 
-      if (rawText) contents.push({ text: `OCR / DOCUMENT TEXT:\n${rawText}` });
+      if (rawText) contents.push({ text: `DOCUMENT TEXT:\n${rawText}` });
       contents.push({ text: analysisPrompt });
 
       const response = await ai.models.generateContent({
@@ -117,148 +157,27 @@ export async function analyzeLegalDocument(
       });
 
       const text = response.text?.trim() || '';
-      const ast = sanitizeAst(JSON.parse(cleanJson(text)) as DocumentAST, rawText, imageDataUrl);
-      return { ast, source: 'gemini' };
+      const ast = sanitizeAst(JSON.parse(cleanLocalJson(text)) as DocumentAST, rawText, imageDataUrl);
+      return { ast, source: 'gemini', model: 'gemini-2.5-flash' };
     } catch (e) {
-      console.warn('[LexMorph] Gemini failed (billing/quota common):', e);
-      warnings.push('Gemini unavailable — using free Groq / OCR path.');
+      console.warn('[LexMorph] Gemini failed:', e);
+      warnings.push('Gemini unavailable.');
     }
   }
 
-  // 2) Groq vision (free multimodal) — skip when OCR already has strong Cyrillic
-  //    (vision models often auto-translate into English court templates)
-  const ocrIsCyrillic = Boolean(rawText && hasCyrillic(rawText));
-
-  if (groqKey && imageDataUrl?.startsWith('data:') && !ocrIsCyrillic) {
-    try {
-      const result = await callGroqVision(groqKey, imageDataUrl, rawText, analysisPrompt);
-      if (result) {
-        const ast = sanitizeAst(result, rawText, imageDataUrl);
-        return {
-          ast,
-          source: 'groq-vision',
-          warning: warnings[0],
-        };
-      }
-    } catch (e) {
-      console.warn('[LexMorph] Groq vision failed:', e);
-      warnings.push('Groq vision failed — falling back to OCR text analysis.');
-    }
-  }
-
-  // 3) Groq text on OCR — only when Latin-dominant (avoids forced English translation)
-  if (groqKey && rawText && rawText.length > 20 && !ocrIsCyrillic) {
-    try {
-      const result = await callGroqForAnalysis(groqKey, rawText, analysisPrompt);
-      if (result) {
-        const ast = sanitizeAst(result, rawText, imageDataUrl);
-        return {
-          ast,
-          source: 'groq-text',
-          warning: warnings[0],
-        };
-      }
-    } catch (e) {
-      console.warn('[LexMorph] Groq text failed:', e);
-    }
-  }
-
-  // 4) Faithful OCR reconstruction (best for Uzbek/Russian mixed letters)
+  // 4) Offline rules / OCR AST
   if (rawText && rawText.length > 20) {
-    try {
-      const ast = buildAstFromOcrText(rawText, { imageUrl: imageDataUrl });
-      return {
-        ast,
-        source: 'ocr-rules',
-        warning:
-          warnings[0] ||
-          (ocrIsCyrillic
-            ? 'Cyrillic document reconstructed with on-device OCR — original language preserved (no auto-translate).'
-            : 'Reconstructed with on-device OCR + statutory rules (no cloud AI key required).'),
-      };
-    } catch (e) {
-      console.warn('[LexMorph] OCR-rules build failed:', e);
-      throw e;
-    }
+    const ast = buildAstFromOcrText(rawText, { imageUrl: imageDataUrl });
+    return {
+      ast,
+      source: 'ocr-rules',
+      warning:
+        warnings[0] ||
+        'Using offline rules (no live Groq). Set GROQ_API_KEY on Vercel and redeploy for live AI.',
+    };
   }
 
-  throw new Error(
-    'Could not analyze this photo. Add a free Groq API key (console.groq.com) or try a clearer image / demo sample.'
-  );
-}
-
-async function callGroqVision(
-  apiKey: string,
-  imageDataUrl: string,
-  rawText: string | undefined,
-  prompt: string
-): Promise<DocumentAST | null> {
-  const groq = new Groq({ apiKey });
-  const userText = rawText
-    ? `OCR hint (may be imperfect):\n${rawText.slice(0, 4000)}\n\n${prompt}`
-    : prompt;
-
-  const completion = await groq.chat.completions.create({
-    model: GROQ_VISION_MODEL,
-    messages: [
-      {
-        role: 'system',
-        content:
-          'You are LexMorph AI. Reconstruct documents faithfully. NEVER translate. NEVER invent court captions. Output only valid JSON.',
-      },
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: userText },
-          { type: 'image_url', image_url: { url: imageDataUrl } },
-        ],
-      },
-    ],
-    temperature: 0.1,
-    max_tokens: 4096,
-    response_format: { type: 'json_object' },
-  });
-
-  const text = completion.choices[0]?.message?.content?.trim() || '';
-  if (!text) return null;
-  return JSON.parse(cleanJson(text)) as DocumentAST;
-}
-
-async function callGroqForAnalysis(
-  apiKey: string,
-  rawText: string,
-  prompt: string
-): Promise<DocumentAST | null> {
-  const groq = new Groq({ apiKey });
-  const userContent = `Analyze this legal document:\n\n${rawText.slice(0, 12000)}\n\n${prompt}`;
-  const models = [GROQ_TEXT_MODEL, ...GROQ_TEXT_FALLBACKS];
-
-  for (const model of models) {
-    try {
-      const completion = await groq.chat.completions.create({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are LexMorph AI. Reconstruct documents faithfully. NEVER translate. NEVER invent court forms. Output only valid JSON.',
-          },
-          { role: 'user', content: userContent },
-        ],
-        temperature: 0.1,
-        max_tokens: 4096,
-        response_format: { type: 'json_object' },
-      });
-
-      const text = completion.choices[0]?.message?.content?.trim() || '';
-      if (!text) continue;
-      return JSON.parse(cleanJson(text)) as DocumentAST;
-    } catch (e) {
-      console.warn(`[LexMorph] Groq model ${model} failed:`, e);
-    }
-  }
-
-  return null;
+  throw new Error('Provide document text to analyze, or open a curated demo sample.');
 }
 
 function buildAnalysisPrompt(): string {
@@ -330,9 +249,24 @@ export async function generatePleadingWithAI(
   apiKey?: string,
   groqApiKey?: string
 ): Promise<string | null> {
-  const geminiKey = apiKey || process.env.GEMINI_API_KEY;
-  const groqKey = groqApiKey || process.env.GROQ_API_KEY;
+  const geminiKey = getServerGeminiKey(apiKey);
+  const groqKey = getServerGroqKey(groqApiKey);
   const prompt = buildPleadingPrompt(astJson, tenantName);
+
+  if (groqKey) {
+    try {
+      const { text } = await groqChatJson({
+        apiKey: groqKey,
+        system: 'You are a legal drafting AI. Output only valid JSON. No markdown.',
+        user: prompt,
+        models: GROQ_TEXT_MODELS,
+        temperature: 0.15,
+      });
+      return text;
+    } catch (e) {
+      console.warn('[LexMorph] Groq pleading failed:', e);
+    }
+  }
 
   if (geminiKey) {
     try {
@@ -344,43 +278,12 @@ export async function generatePleadingWithAI(
       });
       return response.text?.trim() || null;
     } catch (e) {
-      console.warn('[LexMorph] Gemini pleading failed, trying Groq:', e);
-    }
-  }
-
-  if (groqKey) {
-    try {
-      const groq = new Groq({ apiKey: groqKey });
-      for (const model of [GROQ_TEXT_MODEL, ...GROQ_TEXT_FALLBACKS]) {
-        try {
-          const completion = await groq.chat.completions.create({
-            model,
-            messages: [
-              {
-                role: 'system',
-                content: 'You are a legal drafting AI. Output only valid JSON. No markdown.',
-              },
-              { role: 'user', content: prompt },
-            ],
-            temperature: 0.1,
-            max_tokens: 4096,
-            response_format: { type: 'json_object' },
-          });
-          const text = completion.choices[0]?.message?.content?.trim() || null;
-          if (text) return text;
-        } catch {
-          /* try next model */
-        }
-      }
-    } catch (e) {
-      console.warn('[LexMorph] Groq pleading failed:', e);
+      console.warn('[LexMorph] Gemini pleading failed:', e);
     }
   }
 
   return null;
 }
-
-// ─── Hearing Simulator ──────────────────────────────────────────────────────
 
 export async function simulateHearingTurn(
   history: Array<{ speaker: string; text: string }>,
@@ -394,10 +297,30 @@ export async function simulateHearingTurn(
   criticism: string;
   suggestedLegalRefinement: string;
   judgeReply: string;
+  model?: string;
 } | null> {
-  const geminiKey = apiKey || process.env.GEMINI_API_KEY;
-  const groqKey = groqApiKey || process.env.GROQ_API_KEY;
+  const geminiKey = getServerGeminiKey(apiKey);
+  const groqKey = getServerGroqKey(groqApiKey);
   const prompt = buildSimulationPrompt(history, userResponse, caseContext);
+
+  // Groq first (user's primary free key on Vercel)
+  if (groqKey) {
+    try {
+      const { text, model } = await groqChatJson({
+        apiKey: groqKey,
+        system:
+          'You are an NYC/CA housing-court style judge coach. Be specific to the case context. Output only valid JSON.',
+        user: prompt,
+        models: GROQ_TEXT_MODELS,
+        temperature: 0.35,
+        maxTokens: 1200,
+      });
+      const parsed = JSON.parse(text);
+      return { ...parsed, model };
+    } catch (e) {
+      console.warn('[LexMorph] Groq simulation failed:', e);
+    }
+  }
 
   if (geminiKey) {
     try {
@@ -408,38 +331,9 @@ export async function simulateHearingTurn(
         config: { responseMimeType: 'application/json' },
       });
       const text = response.text?.trim() || '';
-      return JSON.parse(cleanJson(text));
+      return { ...JSON.parse(cleanJson(text)), model: 'gemini-2.5-flash' };
     } catch (e) {
-      console.warn('[LexMorph] Gemini simulation failed, trying Groq:', e);
-    }
-  }
-
-  if (groqKey) {
-    try {
-      const groq = new Groq({ apiKey: groqKey });
-      for (const model of [GROQ_TEXT_MODEL, ...GROQ_TEXT_FALLBACKS]) {
-        try {
-          const completion = await groq.chat.completions.create({
-            model,
-            messages: [
-              {
-                role: 'system',
-                content: 'You are an NYC Housing Court judge AI. Output only valid JSON.',
-              },
-              { role: 'user', content: prompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 1024,
-            response_format: { type: 'json_object' },
-          });
-          const text = completion.choices[0]?.message?.content?.trim() || '';
-          if (text) return JSON.parse(cleanJson(text));
-        } catch {
-          /* next */
-        }
-      }
-    } catch (e) {
-      console.warn('[LexMorph] Groq simulation failed:', e);
+      console.warn('[LexMorph] Gemini simulation failed:', e);
     }
   }
 
