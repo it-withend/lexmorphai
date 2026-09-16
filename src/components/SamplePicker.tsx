@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { SAMPLE_CASES, SampleCase } from '@/lib/samples';
-import { AlertCircle, FileText, CheckCircle2, ArrowRight } from 'lucide-react';
+import { AlertCircle, FileText, CheckCircle2, ArrowRight, MapPin, Shield } from 'lucide-react';
 
 interface SamplePickerProps {
   selectedSampleId: string;
@@ -42,10 +42,18 @@ export default function SamplePicker({ selectedSampleId, onSelectSample }: Sampl
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${sample.badgeColor}`}>
-                    {sample.category}
-                  </span>
-                  <span className="text-xs text-slate-400">{sample.jurisdiction}</span>
+                  <div className="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border w-fit ${sample.badgeColor}`}>
+                      {sample.category}
+                    </span>
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {sample.jurisdiction}
+                    </span>
+                  </div>
                 </div>
 
                 {isSelected && (
@@ -71,7 +79,8 @@ export default function SamplePicker({ selectedSampleId, onSelectSample }: Sampl
                     {defectCount} Statutory Defects
                   </span>
                   <span className="text-slate-500">•</span>
-                  <span className="text-emerald-400 font-medium text-[11px]">
+                  <span className="text-emerald-400 font-medium text-[11px] flex items-center gap-1">
+                    <Shield className="w-3 h-3" />
                     {score}% Defense Viability
                   </span>
                 </div>

@@ -27,7 +27,12 @@ export async function POST(req: NextRequest) {
     );
 
     if (aiResult) {
-      return NextResponse.json({ success: true, ...aiResult });
+      return NextResponse.json({
+        success: true,
+        ...aiResult,
+        source: 'ai',
+        model: aiResult.model,
+      });
     }
 
     // Smart heuristic fallback
@@ -83,7 +88,15 @@ export async function POST(req: NextRequest) {
         'Noted. We will take the waiver issue under advisement. Anything else unlawful in the lease you want on the record today?';
     }
 
-    return NextResponse.json({ success: true, score, praise, criticism, suggestedLegalRefinement, judgeReply });
+    return NextResponse.json({
+      success: true,
+      score,
+      praise,
+      criticism,
+      suggestedLegalRefinement,
+      judgeReply,
+      source: 'heuristic',
+    });
   } catch (err: unknown) {
     console.error('API /simulate error:', err);
     const message = err instanceof Error ? err.message : 'Simulation failed';

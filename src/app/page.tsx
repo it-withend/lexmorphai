@@ -13,7 +13,18 @@ import {
   Users,
   Shield,
   Gavel,
+  FileText,
+  Mic2,
+  BadgeCheck,
+  Download,
 } from 'lucide-react';
+
+const HERO_STATS = [
+  { icon: FileCheck, label: '1-Click', detail: 'Court Answer' },
+  { icon: Mic2, label: 'Live', detail: 'Hearing coach' },
+  { icon: ShieldAlert, label: 'Safety', detail: 'AI advice audit' },
+  { icon: Download, label: '.docx', detail: 'Court export' },
+] as const;
 
 export default function LandingPage() {
   return (
@@ -22,10 +33,17 @@ export default function LandingPage() {
 
       <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-emerald-500/15 via-teal-500/10 to-cyan-500/10 blur-[120px] pointer-events-none -z-10 rounded-full" />
+        <div
+          className="absolute inset-0 pointer-events-none -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2394a3b8\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+          }}
+        />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <BadgeCheck className="w-3.5 h-3.5" />
             LexHack 2026 · Access to Justice + AI Safety
           </div>
 
@@ -68,15 +86,18 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-800/80 text-left">
-            {[
-              ['1-Click', 'Verified Answer'],
-              ['Live', 'Hearing coach'],
-              ['Safety', 'AI advice audit'],
-              ['.docx', 'Court export'],
-            ].map(([k, v]) => (
-              <div key={v} className="p-3 rounded-2xl bg-slate-900/40 border border-slate-800/60">
-                <span className="text-2xl font-extrabold text-white font-mono block">{k}</span>
-                <span className="text-xs text-slate-400">{v}</span>
+            {HERO_STATS.map(({ icon: Icon, label, detail }) => (
+              <div
+                key={detail}
+                className="p-3.5 rounded-2xl bg-slate-900/40 border border-slate-800/60 flex items-start gap-3"
+              >
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <span className="text-lg font-extrabold text-white font-mono block leading-tight">{label}</span>
+                  <span className="text-xs text-slate-400">{detail}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -100,7 +121,7 @@ export default function LandingPage() {
               <h3 className="text-base font-bold text-white">Defense Studio</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Paste a notice/lease or open a curated NY/CA case. Flag illegal clauses in plain English, edit the
-                living document, generate a Verified Answer, export Word.
+                living document, generate a court-ready Answer, export Word.
               </p>
               <div className="text-[11px] text-emerald-300/90 space-y-1">
                 <p className="flex items-center gap-1.5">
@@ -110,6 +131,12 @@ export default function LandingPage() {
                   <CheckCircle2 className="w-3.5 h-3.5" /> Counter-pleading generator
                 </p>
               </div>
+              <Link
+                href="/studio"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+              >
+                <FileText className="w-3.5 h-3.5" /> Open Studio <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
 
             <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
@@ -129,6 +156,12 @@ export default function LandingPage() {
                   <CheckCircle2 className="w-3.5 h-3.5" /> Case context from Studio
                 </p>
               </div>
+              <Link
+                href="/simulator"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300"
+              >
+                <Mic2 className="w-3.5 h-3.5" /> Open Coach <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
 
             <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
@@ -148,6 +181,12 @@ export default function LandingPage() {
                   <CheckCircle2 className="w-3.5 h-3.5" /> AI Safety track fit
                 </p>
               </div>
+              <Link
+                href="/auditor"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+              >
+                <Shield className="w-3.5 h-3.5" /> Open Auditor <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
           </div>
         </div>
@@ -156,6 +195,9 @@ export default function LandingPage() {
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-emerald-500/30 relative overflow-hidden">
+            <div className="absolute right-8 top-8 opacity-10 pointer-events-none">
+              <Scale className="w-40 h-40 text-emerald-300" />
+            </div>
             <div className="max-w-2xl space-y-4 relative z-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <Users className="w-3.5 h-3.5" />

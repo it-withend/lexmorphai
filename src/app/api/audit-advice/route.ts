@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { result, source } = await auditLegalAdvice({
+    const { result, source, model } = await auditLegalAdvice({
       adviceText: text,
       situation: pack ? pack.situation : situation,
       jurisdiction: pack ? pack.jurisdiction : jurisdiction,
@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       success: true,
       result,
       source,
+      model: model || undefined,
       sampleSituation: pack?.situation,
       sampleId: pack?.id,
     });

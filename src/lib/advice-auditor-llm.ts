@@ -1,22 +1,18 @@
 import { GoogleGenAI } from '@google/genai';
-import Groq from 'groq-sdk';
 import { AdviceAuditResult } from './types';
 import { buildRulesOnlyAudit, runDeterministicAdviceRules, scoreAdviceRisk } from './advice-audit';
-
-const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'llama-3.3-70b-versatile'];
-
-function cleanJson(text: string): string {
-  return text
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
-}
+import {
+  cleanJson,
+  getServerGeminiKey,
+  getServerGroqKey,
+  groqChatJson,
+  GROQ_TEXT_MODELS,
+} from './groq';
 
 function buildPrompt(situation: string, adviceText: string, jurisdiction?: string): string {
   return `You are LexMorph Advice Auditor — an AI SAFETY reviewer for legal advice given by chatbots.
 
-Your job is NOT to give new legal advice. Your job is to detect unsafe, overconfident, hallucinated, or jurisdiction-wrong guidance.
+Your job is NOT to give new legal advice. Detect unsafe, overconfident, hallucinated, or jurisdiction-wrong guidance.
 
 User situation:
 ${situation || '(not provided)'}
@@ -30,7 +26,7 @@ ${adviceText.slice(0, 8000)}
 
 Return ONLY JSON:
 {
-  "summary": "one paragraph risk summary",
+  "summary": "one paragraph risk summary specific to THIS advice",
   "flags": [
     {
       "id": "f1",
@@ -42,7 +38,7 @@ Return ONLY JSON:
       "saferAlternative": "safer framing (still not legal advice)"
     }
   ],
-  "saferRewrite": "a cautious educational rewrite without guaranteeing outcomes",
+  "saferRewrite": "a cautious educational rewrite tailored to this situation",
   "checklist": ["actionable verification steps"]
 }`;
 }
@@ -53,11 +49,11 @@ export async function auditLegalAdvice(params: {
   jurisdiction?: string;
   apiKey?: string;
   groqApiKey?: string;
-}): Promise<{ result: AdviceAuditResult; source: 'ai' | 'rules' }> {
+}): Promise<{ result: AdviceAuditResult; source: 'ai' | 'rules'; model?: string }> {
   const { adviceText, situation = '', jurisdiction, apiKey, groqApiKey } = params;
   const ruleBase = buildRulesOnlyAudit(adviceText, situation);
-  const geminiKey = apiKey || process.env.GEMINI_API_KEY;
-  const groqKey = groqApiKey || process.env.GROQ_API_KEY;
+  const geminiKey = getServerGeminiKey(apiKey);
+  const groqKey = getServerGroqKey(groqApiKey);
   const prompt = buildPrompt(situation, adviceText, jurisdiction);
 
   const mergeAi = (parsed: Partial<AdviceAuditResult>): AdviceAuditResult => {
@@ -83,6 +79,24 @@ export async function auditLegalAdvice(params: {
     };
   };
 
+  // Prefer Groq (primary free path) — Gemini often fails on unpaid billing and delays demos
+  if (groqKey) {
+    try {
+      const { text, model } = await groqChatJson({
+        apiKey: groqKey,
+        system:
+          'You are an AI safety auditor for legal chatbot answers. Output only valid JSON. Never invent fake reassurance.',
+        user: prompt,
+        models: GROQ_TEXT_MODELS,
+        temperature: 0.2,
+        maxTokens: 3000,
+      });
+      return { result: mergeAi(JSON.parse(text)), source: 'ai', model };
+    } catch (e) {
+      console.warn('[AdviceAuditor] Groq failed:', e);
+    }
+  }
+
   if (geminiKey) {
     try {
       const ai = new GoogleGenAI({ apiKey: geminiKey });
@@ -93,38 +107,14 @@ export async function auditLegalAdvice(params: {
       });
       const text = response.text?.trim() || '';
       if (text) {
-        return { result: mergeAi(JSON.parse(cleanJson(text))), source: 'ai' };
+        return {
+          result: mergeAi(JSON.parse(cleanJson(text))),
+          source: 'ai',
+          model: 'gemini-2.5-flash',
+        };
       }
     } catch (e) {
       console.warn('[AdviceAuditor] Gemini failed:', e);
-    }
-  }
-
-  if (groqKey) {
-    const groq = new Groq({ apiKey: groqKey });
-    for (const model of GROQ_MODELS) {
-      try {
-        const completion = await groq.chat.completions.create({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are an AI safety auditor for legal chatbot answers. Output only valid JSON. Never invent fake reassurance.',
-            },
-            { role: 'user', content: prompt },
-          ],
-          temperature: 0.1,
-          max_tokens: 3000,
-          response_format: { type: 'json_object' },
-        });
-        const text = completion.choices[0]?.message?.content?.trim() || '';
-        if (text) {
-          return { result: mergeAi(JSON.parse(cleanJson(text))), source: 'ai' };
-        }
-      } catch (e) {
-        console.warn(`[AdviceAuditor] Groq ${model} failed:`, e);
-      }
     }
   }
 
