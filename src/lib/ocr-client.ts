@@ -1,6 +1,6 @@
 /**
- * Client-side OCR — free, no API key, runs in the browser.
- * Used when Gemini billing is unavailable; text is then analyzed by Groq or local rules.
+ * Client-side OCR — free, no API key.
+ * Loads Latin + Cyrillic packs so Uzbek/Russian letters survive.
  */
 
 export async function extractTextFromImage(
@@ -8,7 +8,9 @@ export async function extractTextFromImage(
   onProgress?: (status: string, progress: number) => void
 ): Promise<string> {
   const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker('eng', 1, {
+
+  // eng = Latin headers; rus = Cyrillic body (covers Uzbek Cyrillic well enough for free OCR)
+  const worker = await createWorker(['eng', 'rus'], 1, {
     logger: (m) => {
       if (m.status === 'recognizing text' && typeof m.progress === 'number') {
         onProgress?.('Reading text from photo…', Math.round(m.progress * 100));

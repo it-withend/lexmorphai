@@ -15,6 +15,48 @@ import { SAMPLE_CASES } from './samples';
 import { enrichAstWithRules } from './apply-rules';
 import { buildAstFromOcrText } from './ocr-ast';
 
+function hasCyrillic(text: string): boolean {
+  return /[\u0400-\u04FF]/.test(text);
+}
+
+function isUsJurisdiction(jurisdiction: string): boolean {
+  return /new york|california|united states|kings county|los angeles/i.test(jurisdiction || '');
+}
+
+/** Drop invented US court captions / translations when OCR says otherwise. */
+function sanitizeAst(ast: DocumentAST, rawText?: string, imageUrl?: string): DocumentAST {
+  let next: DocumentAST = { ...ast };
+  if (imageUrl) next.originalImageUrl = imageUrl;
+
+  const corpus = `${next.title}\n${next.sections.map((s) => s.content).join('\n')}`;
+  const ocrIsCyrillic = Boolean(rawText && hasCyrillic(rawText));
+  const outputLostCyrillic = ocrIsCyrillic && !hasCyrillic(corpus);
+
+  // If the model translated away from the source script, prefer faithful OCR reconstruction
+  if (outputLostCyrillic && rawText) {
+    return buildAstFromOcrText(rawText, imageUrl);
+  }
+
+  const isCourtLike =
+    next.documentType === 'court_summons' ||
+    next.documentType === 'eviction_notice' ||
+    Boolean(next.caption?.courtName && /court|суд/i.test(next.caption.courtName));
+
+  if (!isCourtLike || !next.caption?.courtName?.trim() || !next.caption?.plaintiff?.trim()) {
+    next = { ...next, caption: undefined };
+  }
+
+  if (!isUsJurisdiction(next.jurisdiction)) {
+    // Never apply US-only defect inventions outside US docs
+    next = {
+      ...next,
+      defects: next.defects.filter((d) => !/RPAPL|RPL §|Civil Code § 1950|FDCPA|15 U\.S\.C/i.test(d.citation)),
+    };
+  }
+
+  return isUsJurisdiction(next.jurisdiction) ? enrichAstWithRules(next, rawText) : next;
+}
+
 export type AnalysisSource =
   | 'gemini'
   | 'groq-vision'
@@ -75,8 +117,7 @@ export async function analyzeLegalDocument(
       });
 
       const text = response.text?.trim() || '';
-      const ast = enrichAstWithRules(JSON.parse(cleanJson(text)) as DocumentAST, rawText);
-      if (imageDataUrl) ast.originalImageUrl = imageDataUrl;
+      const ast = sanitizeAst(JSON.parse(cleanJson(text)) as DocumentAST, rawText, imageDataUrl);
       return { ast, source: 'gemini' };
     } catch (e) {
       console.warn('[LexMorph] Gemini failed (billing/quota common):', e);
@@ -84,13 +125,15 @@ export async function analyzeLegalDocument(
     }
   }
 
-  // 2) Groq vision (free multimodal)
-  if (groqKey && imageDataUrl?.startsWith('data:')) {
+  // 2) Groq vision (free multimodal) — skip when OCR already has strong Cyrillic
+  //    (vision models often auto-translate into English court templates)
+  const ocrIsCyrillic = Boolean(rawText && hasCyrillic(rawText));
+
+  if (groqKey && imageDataUrl?.startsWith('data:') && !ocrIsCyrillic) {
     try {
       const result = await callGroqVision(groqKey, imageDataUrl, rawText, analysisPrompt);
       if (result) {
-        const ast = enrichAstWithRules(result, rawText);
-        ast.originalImageUrl = imageDataUrl;
+        const ast = sanitizeAst(result, rawText, imageDataUrl);
         return {
           ast,
           source: 'groq-vision',
@@ -103,13 +146,12 @@ export async function analyzeLegalDocument(
     }
   }
 
-  // 3) Groq text on OCR
-  if (groqKey && rawText && rawText.length > 20) {
+  // 3) Groq text on OCR — only when Latin-dominant (avoids forced English translation)
+  if (groqKey && rawText && rawText.length > 20 && !ocrIsCyrillic) {
     try {
       const result = await callGroqForAnalysis(groqKey, rawText, analysisPrompt);
       if (result) {
-        const ast = enrichAstWithRules(result, rawText);
-        if (imageDataUrl) ast.originalImageUrl = imageDataUrl;
+        const ast = sanitizeAst(result, rawText, imageDataUrl);
         return {
           ast,
           source: 'groq-text',
@@ -121,7 +163,7 @@ export async function analyzeLegalDocument(
     }
   }
 
-  // 4) Zero-key: OCR text + statutory rules → editable AST
+  // 4) Faithful OCR reconstruction (best for Uzbek/Russian mixed letters)
   if (rawText && rawText.length > 20) {
     try {
       const ast = buildAstFromOcrText(rawText, imageDataUrl);
@@ -130,7 +172,9 @@ export async function analyzeLegalDocument(
         source: 'ocr-rules',
         warning:
           warnings[0] ||
-          'Reconstructed with on-device OCR + statutory rules (no cloud AI key required).',
+          (ocrIsCyrillic
+            ? 'Cyrillic document reconstructed with on-device OCR — original language preserved (no auto-translate).'
+            : 'Reconstructed with on-device OCR + statutory rules (no cloud AI key required).'),
       };
     } catch (e) {
       console.warn('[LexMorph] OCR-rules build failed:', e);
@@ -160,7 +204,7 @@ async function callGroqVision(
       {
         role: 'system',
         content:
-          'You are LexMorph AI, an expert legal tech analyst. Output only valid JSON matching the DocumentAST schema. No markdown.',
+          'You are LexMorph AI. Reconstruct documents faithfully. NEVER translate. NEVER invent court captions. Output only valid JSON.',
       },
       {
         role: 'user',
@@ -197,7 +241,7 @@ async function callGroqForAnalysis(
           {
             role: 'system',
             content:
-              'You are LexMorph AI, an expert legal tech analyst. Output only valid JSON matching the DocumentAST schema. No markdown, no explanations.',
+              'You are LexMorph AI. Reconstruct documents faithfully. NEVER translate. NEVER invent court forms. Output only valid JSON.',
           },
           { role: 'user', content: userContent },
         ],
@@ -218,59 +262,45 @@ async function callGroqForAnalysis(
 }
 
 function buildAnalysisPrompt(): string {
-  return `You are LexMorph AI, an expert Senior Legal Tech and Court Procedure Specialist.
-Analyze this legal document and reconstruct it into a structured DocumentAST with statutory defect auditing.
+  return `You are LexMorph AI — a DOCUMENT RECONSTRUCTION engine (not a translator, not a US court form filler).
 
-Return ONLY valid JSON matching this exact schema:
+CRITICAL RULES (must follow):
+1. NEVER translate. Keep the EXACT original language and script (Uzbek Latin, Uzbek Cyrillic, Russian Cyrillic, English, mixed — as written).
+2. NEVER invent a court caption, Index No., plaintiff/defendant, or "EVICTION NOTICE" unless the photo clearly is a court filing.
+3. For ordinary business letters / МЧЖ letters: documentType = "general_contract", caption = null/omit, put letterhead + body into sections in original wording.
+4. Do NOT force US Housing Court / NY RPAPL templates onto non-US documents.
+5. Only flag defects with real citations matching the document's jurisdiction. If unsure, defects = [] and explain in audit.summaryHeadline that manual review is needed.
+6. Prefer fidelity over creativity. If OCR is messy, still keep original script characters — do not "clean up" by translating to English.
+
+Analyze the document and return ONLY valid JSON:
 {
   "id": "doc_generated",
-  "title": "Document Title",
+  "title": "Short title in the ORIGINAL language",
   "documentType": "eviction_notice" | "residential_lease" | "court_summons" | "debt_demand" | "general_contract",
-  "jurisdiction": "State and County",
-  "caption": {
-    "courtName": "...",
-    "countyOrDistrict": "...",
-    "plaintiff": "...",
-    "defendant": "...",
-    "indexNumber": "...",
-    "documentTitle": "..."
-  },
+  "jurisdiction": "Country / region as written on the document",
+  "caption": null,
   "metadata": {
-    "dateIssued": "YYYY-MM-DD",
-    "deadlineDate": "YYYY-MM-DD",
+    "dateIssued": "YYYY-MM-DD or empty",
+    "deadlineDate": "",
     "daysRemaining": 0,
-    "claimAmount": "$...",
-    "propertyAddress": "..."
+    "claimAmount": "",
+    "propertyAddress": ""
   },
   "sections": [
     {
       "id": "sec_1",
-      "type": "header" | "caption" | "paragraph" | "clause" | "statutory_warning" | "table" | "signature_block",
-      "title": "optional title",
-      "content": "full text",
-      "clauseNumber": "optional",
-      "redFlagId": "defect_id_if_this_section_is_defective_or_null"
+      "type": "header" | "paragraph" | "clause" | "signature_block",
+      "title": "optional — original language",
+      "content": "FULL original text for this block — do not translate",
+      "redFlagId": null
     }
   ],
-  "defects": [
-    {
-      "id": "defect_1",
-      "severity": "critical" | "warning" | "info",
-      "category": "procedural_defect" | "unlawful_clause" | "missing_statutory_notice" | "deadline_trap" | "habitability_breach",
-      "title": "Short title",
-      "citation": "Statute citation",
-      "originalExcerpt": "Quote from document",
-      "plainEnglishExplanation": "What this means in plain English",
-      "recommendedDefense": "What to argue in court",
-      "statutoryRemedy": "Available legal remedy",
-      "dismissalImpactPercentage": 90
-    }
-  ],
+  "defects": [],
   "audit": {
-    "defenseViabilityScore": 95,
-    "viabilityGrade": "Strong Dismissal Grounds" | "Viable Counterclaims" | "Moderate Defense" | "Review Needed",
-    "summaryHeadline": "One sentence summary",
-    "keyFindings": ["finding1", "finding2"],
+    "defenseViabilityScore": 40,
+    "viabilityGrade": "Review Needed",
+    "summaryHeadline": "One sentence in English describing what the document appears to be",
+    "keyFindings": ["finding in English"],
     "actionSteps": [
       {
         "stepNumber": 1,
@@ -281,7 +311,9 @@ Return ONLY valid JSON matching this exact schema:
       }
     ]
   }
-}`;
+}
+
+Only include a non-null "caption" object if this is clearly a court pleading with parties and a case number.`;
 }
 
 /** Sample-only helper for curated demos */

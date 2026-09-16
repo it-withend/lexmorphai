@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { DocumentAST, LegalDefect } from '@/lib/types';
+import { printLivingDocument } from '@/lib/print-document';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -141,7 +142,7 @@ export default function RedFlagSidebar({
           </button>
 
           <button
-            onClick={() => window.print()}
+            onClick={() => printLivingDocument(ast)}
             className="py-2 px-3 rounded-lg text-xs font-medium bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white transition-colors flex items-center justify-center gap-1.5"
           >
             <Printer className="w-3.5 h-3.5 text-emerald-400" />
@@ -149,7 +150,7 @@ export default function RedFlagSidebar({
           </button>
         </div>
         <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
-          Editable file = Word (.docx). Print / Save PDF uses your browser print dialog on the reconstructed page.
+          Editable file = Word (.docx). Print opens a clean page with only the letter — use your browser&apos;s &quot;Save as PDF&quot;.
         </p>
       </div>
 

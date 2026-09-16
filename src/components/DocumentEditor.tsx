@@ -70,14 +70,17 @@ export default function DocumentEditor({
 
       {/* Main Document Paper Container */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center bg-slate-950/80">
-        <div className="w-full max-w-3xl min-h-[900px] bg-[#fefdfa] text-[#111827] rounded-lg shadow-2xl border border-[#e5e0d3] p-8 sm:p-12 font-serif text-[15px] leading-relaxed relative selection:bg-emerald-100 selection:text-emerald-950">
-          {/* Subtle Document Header Stamp */}
-          <div className="absolute top-4 right-6 text-[10px] font-mono text-slate-400 uppercase tracking-widest pointer-events-none">
-            LexMorph Living Schema • {ast.jurisdiction}
+        <div
+          id="lexmorph-paper"
+          className="w-full max-w-3xl min-h-[900px] bg-[#fefdfa] text-[#111827] rounded-lg shadow-2xl border border-[#e5e0d3] p-8 sm:p-12 font-serif text-[15px] leading-relaxed relative selection:bg-emerald-100 selection:text-emerald-950"
+        >
+          {/* Subtle Document Header Stamp — hidden when printing */}
+          <div className="absolute top-4 right-6 text-[10px] font-mono text-slate-400 uppercase tracking-widest pointer-events-none print:hidden">
+            LexMorph · {ast.jurisdiction}
           </div>
 
-          {/* Court Caption Block (if present) */}
-          {ast.caption && (
+          {/* Court Caption — only when this is a real court filing */}
+          {ast.caption?.courtName?.trim() && ast.caption?.plaintiff?.trim() ? (
             <div className="mb-8 pb-6 border-b-2 border-slate-900">
               <div className="text-center font-bold text-base tracking-wide uppercase mb-1">
                 {ast.caption.courtName}
@@ -87,14 +90,12 @@ export default function DocumentEditor({
               </div>
 
               <div className="grid grid-cols-12 border-t border-b border-slate-800 py-3 gap-4">
-                {/* Left side: Parties */}
                 <div className="col-span-7 pr-4 border-r border-slate-300">
                   <div className="font-bold text-sm">{ast.caption.plaintiff}</div>
                   <div className="text-xs italic text-slate-600 my-1">-against-</div>
                   <div className="font-bold text-sm">{ast.caption.defendant}</div>
                 </div>
 
-                {/* Right side: Index & Caption */}
                 <div className="col-span-5 pl-2 flex flex-col justify-center text-xs">
                   <div className="font-bold text-slate-900">Index No. {ast.caption.indexNumber}</div>
                   <div className="text-[11px] text-slate-600 mt-1 uppercase font-semibold">
@@ -108,11 +109,8 @@ export default function DocumentEditor({
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Standard Document Title if no formal caption */}
-          {!ast.caption && (
-            <div className="text-center font-bold text-lg uppercase tracking-wide mb-6 pb-4 border-b border-slate-300">
+          ) : (
+            <div className="text-center font-bold text-lg tracking-wide mb-6 pb-4 border-b border-slate-300">
               {ast.title}
             </div>
           )}
