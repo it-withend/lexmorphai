@@ -83,7 +83,9 @@ export interface DocumentAST {
   embedImageWidth?: number;
   embedImageHeight?: number;
   ocrConfidence?: number;
-  reconstructionMode?: 'visual_twin' | 'sample' | 'ai_ast';
+  reconstructionMode?: 'visual_twin' | 'sample' | 'ai_ast' | 'text_audit';
+  /** Raw pasted / uploaded text shown beside the living editor */
+  sourceText?: string;
   caption?: CourtCaption;
   metadata: {
     dateIssued: string;
@@ -144,4 +146,37 @@ export interface HearingSimulationState {
   currentTurnIndex: number;
   overallScore: number;
   turns: HearingSimulatorTurn[];
+}
+
+/** AI Legal Advice Safety Auditor (Track D) */
+export type AdviceRiskLevel = 'critical' | 'high' | 'moderate' | 'low';
+
+export type AdviceFlagCategory =
+  | 'hallucinated_law'
+  | 'wrong_jurisdiction'
+  | 'overconfidence'
+  | 'dangerous_action'
+  | 'missing_disclaimer'
+  | 'procedural_trap'
+  | 'fabricated_citation';
+
+export interface AdviceSafetyFlag {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  category: AdviceFlagCategory;
+  title: string;
+  excerpt: string;
+  explanation: string;
+  saferAlternative: string;
+}
+
+export interface AdviceAuditResult {
+  id: string;
+  overallRisk: number; // 0 = safe, 100 = extremely dangerous
+  riskLevel: AdviceRiskLevel;
+  summary: string;
+  flags: AdviceSafetyFlag[];
+  saferRewrite: string;
+  checklist: string[];
+  disclaimers: string[];
 }

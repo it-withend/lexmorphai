@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'LexMorph AI — Living Legal Document Engine & Pro Se Justice',
   description:
-    'Turn a phone photo of an eviction notice or lease into an editable living document, audit statutory defects, and generate a court-ready Answer as Word (.docx).',
+    'LexMorph Defense Studio: audit notices & leases, draft court Answers, rehearse hearings, and stress-test unsafe ChatGPT legal advice.',
   keywords: [
     'Legal Tech',
     'LexHack 2026',

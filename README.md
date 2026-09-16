@@ -1,60 +1,44 @@
-# LexMorph AI
+# LexMorph AI — Defense Studio
 
-**LexHack 2026** · Access to Justice & Civic Tech
+**LexHack 2026** · Access to Justice & Civic Tech · AI Safety (Advice Auditor)
 
-Turn a phone photo of an eviction notice, lease, or summons into an **editable living document**, flag statutory defects in plain English, generate a court-ready Answer, and practice oral argument in a hearing simulator.
+## What it is
 
-> Not legal advice. Educational prototype for pro se awareness.
+LexMorph helps pro se tenants:
 
-## Demo path (90 seconds)
+1. **Defense Studio** (`/studio`) — audit a notice/lease (demo cases or pasted text), edit a living document, generate a Verified Answer (`.docx`)
+2. **Hearing Coach** (`/simulator`) — rehearse Housing Court with scored feedback
+3. **Advice Auditor** (`/auditor`) — stress-test ChatGPT-style legal advice for dangerous actions, fake citations, and overconfidence
 
-1. Open `/studio`
-2. Click **NYC Eviction Notice** (works offline, no API keys)
-3. Click red flags → **Generate Official Court Answer** → download `.docx`
-4. Open `/simulator` and try a quick defense
+> Not legal advice. Educational hackathon prototype.
 
-## Photo → editable document (no paid Gemini)
+## Demo script (3 minutes)
 
-Google Gemini free keys often fail without billing. LexMorph uses a **free-first** pipeline:
-
-1. **On-device OCR** (`tesseract.js`) — extracts text in the browser
-2. **Groq vision / text** (optional free key from [console.groq.com/keys](https://console.groq.com/keys))
-3. **Statutory rules engine** (`src/lib/legal-rules.ts`) — deterministic NY / CA / FDCPA triggers
-4. Gemini only if you already have a working key
-
-Editable export is **native Word (.docx)**. Use **Print / Save PDF** in the browser for a PDF copy of the reconstructed page.
+1. Landing → **Open Defense Studio**
+2. Click **NYC Eviction Notice** → review red flags → **Generate Official Court Answer** → download `.docx`
+3. **Practice this case in Court** → use a quick answer citing RPAPL § 711
+4. Open **Advice Auditor** → **Run bad-advice demo** → show risk score + safer rewrite
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env.local
-# optional:
+# optional free keys:
 # GROQ_API_KEY=gsk_...
 # GEMINI_API_KEY=AIza...
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-You can also paste keys in the app navbar (**API Keys**) — stored only in your browser `localStorage`.
+Keys can also be pasted in the navbar (**API Keys**) — stored in browser `localStorage` only.
 
 ## Tech stack
 
 - Next.js 16 · React 19 · TypeScript · Tailwind CSS 4
-- OCR: `tesseract.js` (client)
-- LLMs: Groq (`qwen/qwen3.6-27b` vision, `openai/gpt-oss-120b` text) · optional Gemini 2.5 Flash
+- LLMs: optional Groq / Gemini (demos work with offline rules + samples)
 - Export: `docx`
-- Domain: DocumentAST + statutory knowledge base
+- Safety auditor: deterministic danger patterns + LLM enrichment
 
-## Scripts
-
-| Command | Purpose |
-|--------|---------|
-| `npm run dev` | Local development |
-| `npm run build` | Production build |
-| `npm run start` | Serve production build |
-
-## Repository
+## Repo
 
 https://github.com/it-withend/lexmorphai

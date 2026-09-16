@@ -45,7 +45,7 @@ export default function Navbar() {
                   LexMorph <span className="text-emerald-400">AI</span>
                 </span>
                 <span className="text-[10px] font-medium tracking-wide uppercase text-slate-400 -mt-1">
-                  Living Legal Documents
+                  Defense Studio
                 </span>
               </div>
             </Link>
@@ -70,8 +70,15 @@ export default function Navbar() {
               className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"
             >
               <Scale className="w-4 h-4 text-cyan-400" />
-              <span className="hidden sm:inline">Hearing Simulator</span>
-              <span className="sm:hidden">Court</span>
+              <span className="hidden sm:inline">Hearing</span>
+            </Link>
+
+            <Link
+              href="/auditor"
+              className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"
+            >
+              <Shield className="w-4 h-4 text-violet-400" />
+              <span className="hidden sm:inline">Auditor</span>
             </Link>
 
             <button

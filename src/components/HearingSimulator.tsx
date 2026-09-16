@@ -55,6 +55,15 @@ export default function HearingSimulator() {
         body: JSON.stringify({
           history: updatedHistory.map((t) => ({ speaker: t.speaker, text: t.text })),
           userResponse: text,
+          caseContext:
+            (typeof window !== 'undefined' && sessionStorage.getItem('lexmorph_case_context')) ||
+            undefined,
+          apiKey:
+            (typeof window !== 'undefined' && localStorage.getItem('lexmorph_gemini_key')) ||
+            undefined,
+          groqApiKey:
+            (typeof window !== 'undefined' && localStorage.getItem('lexmorph_groq_key')) ||
+            undefined,
         }),
       });
 
