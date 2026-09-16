@@ -1,23 +1,18 @@
 import { DocumentAST, DocumentType } from './types';
 import { enrichAstWithRules, matchStatutoryRules } from './apply-rules';
+import type { OcrLine } from './ocr-client';
 
 function detectDocumentType(text: string): DocumentType {
-  const t = text.toLowerCase();
-  // Court / eviction — only when clearly present
-  if (
-    /\b(notice to quit|rent demand|eviction|vacate|выселен|истеъфо)\b/i.test(text) ||
-    t.includes('notice to quit') ||
-    t.includes('rent demand')
-  ) {
+  if (/\b(notice to quit|rent demand|eviction|vacate|выселен)\b/i.test(text)) {
     return 'eviction_notice';
   }
   if (/\b(lease agreement|residential lease|ijara shartnomasi|договор аренды)\b/i.test(text)) {
     return 'residential_lease';
   }
-  if (/\b(summons|appear in court|index no|исковое|судга чақирув)\b/i.test(text)) {
+  if (/\b(summons|appear in court|index no|исковое)\b/i.test(text)) {
     return 'court_summons';
   }
-  if (/\b(debt collection|amount due|past due|задолженн|қарз талаб)\b/i.test(text)) {
+  if (/\b(debt collection|amount due|past due|задолженн)\b/i.test(text)) {
     return 'debt_demand';
   }
   return 'general_contract';
@@ -30,13 +25,13 @@ function detectJurisdiction(text: string): string {
     t.includes('samarqand') ||
     t.includes('toshkent') ||
     t.includes('тошкент') ||
-    t.includes('o‘zbek') ||
-    t.includes('ozbek') ||
     t.includes('uzbekistan') ||
     t.includes('ўзбекистон') ||
     t.includes('мчж') ||
     t.includes('mchj') ||
-    t.includes('+998')
+    t.includes('+998') ||
+    t.includes('xavas') ||
+    t.includes('aloqa bank')
   ) {
     if (t.includes('самарқанд') || t.includes('samarqand')) return 'Uzbekistan (Samarkand)';
     if (t.includes('toshkent') || t.includes('тошкент')) return 'Uzbekistan (Tashkent)';
@@ -54,7 +49,7 @@ function isUsJurisdiction(jurisdiction: string): boolean {
 }
 
 function looksLikeCourtCaption(text: string): boolean {
-  return /\b(court|суд|index no|plaintiff|defendant|истец|жавобгар|against)\b/i.test(text);
+  return /\b(court|суд|index no|plaintiff|defendant|истец)\b/i.test(text);
 }
 
 function extractAmount(text: string): string | undefined {
@@ -75,36 +70,46 @@ function guessTitle(type: DocumentType, lines: string[]): string {
     case 'debt_demand':
       return 'Debt Collection Demand';
     default:
-      return header || 'Reconstructed Document';
+      return header || 'Visual Twin Document';
   }
 }
 
+export interface BuildAstOptions {
+  imageUrl?: string;
+  embedImageUrl?: string;
+  embedWidth?: number;
+  embedHeight?: number;
+  lines?: OcrLine[];
+  ocrConfidence?: number;
+}
+
 /**
- * Faithful reconstruction from OCR — preserves original language, no invented court forms.
+ * Faithful reconstruction: photo is the visual twin; OCR lines are the editable layer.
  */
-export function buildAstFromOcrText(rawText: string, imageUrl?: string): DocumentAST {
+export function buildAstFromOcrText(rawText: string, options: BuildAstOptions = {}): DocumentAST {
   const cleaned = rawText.replace(/\r/g, '').trim();
-  if (!cleaned || cleaned.length < 20) {
-    throw new Error('Could not read enough text from this photo. Try a clearer image or a demo sample.');
+  if (!cleaned || cleaned.length < 12) {
+    throw new Error('Could not read enough text from this photo. Try a clearer, flatter photo.');
   }
 
   const documentType = detectDocumentType(cleaned);
   const jurisdiction = detectJurisdiction(cleaned);
-  const lines = cleaned
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
 
-  // Keep line breaks — do not smash into one English-looking blob
-  const sections: DocumentAST['sections'] = lines.slice(0, 40).map((content, i) => ({
+  const lineTexts =
+    options.lines && options.lines.length > 0
+      ? options.lines.map((l) => l.text)
+      : cleaned
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean);
+
+  const sections: DocumentAST['sections'] = lineTexts.slice(0, 60).map((content, i) => ({
     id: `ocr_sec_${i + 1}`,
-    type: (i < 3 ? 'header' : 'paragraph') as 'header' | 'paragraph',
+    type: (i < 4 ? 'header' : 'paragraph') as 'header' | 'paragraph',
     content,
   }));
 
-  // Only apply US statutory rules when the document is actually US-scoped
   const defects = isUsJurisdiction(jurisdiction) ? matchStatutoryRules(cleaned) : [];
-
   for (const defect of defects) {
     const idx = sections.findIndex((s) =>
       s.content.toLowerCase().includes(defect.originalExcerpt.slice(0, 12).toLowerCase())
@@ -114,17 +119,23 @@ export function buildAstFromOcrText(rawText: string, imageUrl?: string): Documen
     }
   }
 
-  const claimAmount = extractAmount(cleaned);
   const includeCaption =
     (documentType === 'court_summons' || documentType === 'eviction_notice') &&
     looksLikeCourtCaption(cleaned);
 
+  const conf = options.ocrConfidence ?? 0;
+
   const base: DocumentAST = {
     id: `ocr_${Date.now()}`,
-    title: guessTitle(documentType, lines),
+    title: guessTitle(documentType, lineTexts),
     documentType,
     jurisdiction,
-    originalImageUrl: imageUrl,
+    originalImageUrl: options.imageUrl,
+    embedImageUrl: options.embedImageUrl || options.imageUrl,
+    embedImageWidth: options.embedWidth,
+    embedImageHeight: options.embedHeight,
+    ocrConfidence: conf,
+    reconstructionMode: 'visual_twin',
     caption: includeCaption
       ? {
           courtName: '',
@@ -132,15 +143,14 @@ export function buildAstFromOcrText(rawText: string, imageUrl?: string): Documen
           plaintiff: '',
           defendant: '',
           indexNumber: '',
-          documentTitle: guessTitle(documentType, lines),
+          documentTitle: guessTitle(documentType, lineTexts),
         }
       : undefined,
     metadata: {
       dateIssued: '',
       deadlineDate: '',
       daysRemaining: 0,
-      claimAmount,
-      propertyAddress: undefined,
+      claimAmount: extractAmount(cleaned),
     },
     sections,
     defects,
@@ -149,33 +159,34 @@ export function buildAstFromOcrText(rawText: string, imageUrl?: string): Documen
       viabilityGrade: defects.length ? 'Moderate Defense' : 'Review Needed',
       summaryHeadline: isUsJurisdiction(jurisdiction)
         ? ''
-        : 'Document reconstructed from OCR. Original language preserved. Review and edit any misread lines before relying on this text.',
-      keyFindings: isUsJurisdiction(jurisdiction)
-        ? []
-        : [
-            'This does not appear to be a US court filing — no US statutory rules were auto-applied.',
-            'Edit any OCR mistakes directly in the living document canvas.',
-          ],
+        : `Visual twin ready: original photo preserved (logo, stamp, signature). OCR transcript confidence ~${conf}%. Edit any misread lines below.`,
+      keyFindings: [
+        '1:1 visual fidelity comes from the original photo embedded in the living document and Word export.',
+        'OCR text is an editable layer — fix mistakes by clicking lines. Free OCR is imperfect on seals and handwriting.',
+        ...(isUsJurisdiction(jurisdiction)
+          ? []
+          : ['Non-US document: no US statutory rules were auto-applied.']),
+      ],
       actionSteps: [
         {
           stepNumber: 1,
-          title: 'Correct OCR mistakes',
+          title: 'Review the photo twin',
           deadline: 'Now',
-          description: 'Click any line in the living document and fix text that does not match the photo.',
+          description: 'The top image is your exact document — stamp, logo, and signature stay as photographed.',
           urgent: true,
         },
         {
           stepNumber: 2,
-          title: 'Download Word (.docx)',
-          deadline: 'Today',
-          description: 'Export the corrected text as an editable Word file — this is the reliable editable output.',
-          urgent: false,
+          title: 'Fix OCR transcript lines',
+          deadline: 'Now',
+          description: 'Click any line under the photo and correct text that does not match the scan.',
+          urgent: true,
         },
         {
           stepNumber: 3,
-          title: 'Print / Save PDF cleanly',
-          deadline: 'When needed',
-          description: 'Use Print Document — it opens a clean page with only the letter, not the website chrome.',
+          title: 'Download Word Visual Twin',
+          deadline: 'Today',
+          description: 'Export .docx — page 1 is the original scan; following pages are editable text.',
           urgent: false,
         },
       ],

@@ -49,14 +49,22 @@ export default function RedFlagSidebar({
       const res = await fetch('/api/export-docx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'ast', data: ast, filename: 'reconstructed_legal_document.docx' }),
+        body: JSON.stringify({
+          type: 'ast',
+          data: ast,
+          filename: ast.originalImageUrl
+            ? 'lexmorph_visual_twin.docx'
+            : 'reconstructed_legal_document.docx',
+        }),
       });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'reconstructed_legal_document.docx';
+      a.download = ast.originalImageUrl
+        ? 'lexmorph_visual_twin.docx'
+        : 'reconstructed_legal_document.docx';
       document.body.appendChild(a);
       a.click();
       a.remove();

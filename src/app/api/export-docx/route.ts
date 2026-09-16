@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateDocumentDocx, generatePleadingDocx } from '@/lib/docx-generator';
 import { DocumentAST, CounterPleading } from '@/lib/types';
 
+export const maxDuration = 60;
+export const runtime = 'nodejs';
+
+// Large visual-twin payloads include the embedded scan image
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

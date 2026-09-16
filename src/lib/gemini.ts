@@ -34,7 +34,7 @@ function sanitizeAst(ast: DocumentAST, rawText?: string, imageUrl?: string): Doc
 
   // If the model translated away from the source script, prefer faithful OCR reconstruction
   if (outputLostCyrillic && rawText) {
-    return buildAstFromOcrText(rawText, imageUrl);
+    return buildAstFromOcrText(rawText, { imageUrl });
   }
 
   const isCourtLike =
@@ -166,7 +166,7 @@ export async function analyzeLegalDocument(
   // 4) Faithful OCR reconstruction (best for Uzbek/Russian mixed letters)
   if (rawText && rawText.length > 20) {
     try {
-      const ast = buildAstFromOcrText(rawText, imageDataUrl);
+      const ast = buildAstFromOcrText(rawText, { imageUrl: imageDataUrl });
       return {
         ast,
         source: 'ocr-rules',

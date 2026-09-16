@@ -1,6 +1,5 @@
 import { DocumentAST } from './types';
 
-/** Escape text for safe HTML injection in the print window. */
 function esc(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -10,16 +9,22 @@ function esc(s: string): string {
 }
 
 /**
- * Opens a clean print window with ONLY the reconstructed letter —
- * no LexMorph chrome, sidebar, or dark UI.
+ * Clean print window: exact photo twin first, then transcript — no site chrome.
  */
 export function printLivingDocument(ast: DocumentAST): void {
   const showCaption =
     Boolean(ast.caption?.courtName?.trim()) && Boolean(ast.caption?.plaintiff?.trim());
 
-  const captionHtml = showCaption && ast.caption
-    ? `
-      <div class="caption">
+  const photoHtml = ast.originalImageUrl
+    ? `<div class="photo-wrap">
+        <p class="badge">Visual Twin — exact photo (logo, stamp, signature)</p>
+        <img src="${ast.originalImageUrl}" alt="Original document scan" />
+      </div>`
+    : '';
+
+  const captionHtml =
+    showCaption && ast.caption
+      ? `<div class="caption">
         <h1>${esc(ast.caption.courtName)}</h1>
         <h2>${esc(ast.caption.countyOrDistrict || '')}</h2>
         <div class="parties">
@@ -34,7 +39,7 @@ export function printLivingDocument(ast: DocumentAST): void {
           </div>
         </div>
       </div>`
-    : `<h1 class="title">${esc(ast.title)}</h1>`;
+      : '';
 
   const sectionsHtml = ast.sections
     .map((s) => {
@@ -49,21 +54,27 @@ export function printLivingDocument(ast: DocumentAST): void {
   <meta charset="utf-8" />
   <title>${esc(ast.title)}</title>
   <style>
-    @page { margin: 18mm; }
+    @page { margin: 12mm; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: "Times New Roman", Times, serif;
-      font-size: 12pt;
-      line-height: 1.45;
+      font-size: 11pt;
+      line-height: 1.4;
       color: #111;
       background: #fff;
     }
-    .sheet { max-width: 800px; margin: 0 auto; padding: 12mm 0; }
-    h1, h2, .title { text-align: center; margin: 0 0 8px; }
-    .title { font-size: 14pt; text-transform: none; margin-bottom: 18px; }
-    .caption h1 { font-size: 13pt; text-transform: uppercase; }
-    .caption h2 { font-size: 11pt; font-weight: 600; margin-bottom: 16px; }
+    .sheet { max-width: 800px; margin: 0 auto; }
+    .badge {
+      font-family: Arial, sans-serif;
+      font-size: 9pt;
+      color: #166534;
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    .photo-wrap { margin-bottom: 18px; page-break-after: always; }
+    .photo-wrap img { width: 100%; height: auto; display: block; border: 1px solid #ddd; }
+    h1, h2 { text-align: center; margin: 0 0 8px; }
     .parties {
       display: grid;
       grid-template-columns: 1.4fr 1fr;
@@ -71,36 +82,40 @@ export function printLivingDocument(ast: DocumentAST): void {
       border-top: 1.5px solid #111;
       border-bottom: 1.5px solid #111;
       padding: 10px 0;
-      margin-bottom: 20px;
-      font-size: 11pt;
+      margin-bottom: 16px;
     }
-    .index { font-size: 10pt; }
-    section { margin: 0 0 14px; }
-    .sec-title { font-weight: 700; font-size: 10pt; margin-bottom: 4px; text-transform: uppercase; }
+    section { margin: 0 0 10px; }
+    .sec-title { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
     p { margin: 0; white-space: pre-wrap; word-break: break-word; }
     .meta {
-      margin-top: 28px;
-      padding-top: 10px;
+      margin-top: 20px;
+      padding-top: 8px;
       border-top: 1px solid #ccc;
-      font-size: 9pt;
+      font-size: 8pt;
       color: #555;
       font-family: Arial, sans-serif;
     }
-    @media print {
-      .no-print { display: none !important; }
-      body { background: #fff; }
+    .transcript-label {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #334155;
+      margin: 0 0 12px;
+      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
   <div class="sheet">
+    ${photoHtml}
+    <p class="transcript-label">Editable transcript</p>
     ${captionHtml}
     ${sectionsHtml}
-    <div class="meta">LexMorph reconstruction · ${esc(ast.jurisdiction)} · Not legal advice</div>
+    <div class="meta">LexMorph Visual Twin · ${esc(ast.jurisdiction)} · Not legal advice</div>
   </div>
   <script>
     window.onload = function () {
-      setTimeout(function () { window.print(); }, 250);
+      setTimeout(function () { window.print(); }, 300);
     };
   </script>
 </body>

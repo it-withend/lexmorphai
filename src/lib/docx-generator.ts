@@ -9,17 +9,114 @@ import {
   BorderStyle,
   WidthType,
   Packer,
+  ImageRun,
+  PageBreak,
 } from 'docx';
 import { DocumentAST, CounterPleading } from './types';
 
+function parseDataUrl(dataUrl: string): { type: 'jpg' | 'png' | 'gif' | 'bmp'; data: Buffer } | null {
+  const m = dataUrl.match(/^data:image\/(jpeg|jpg|png|gif|bmp);base64,(.+)$/i);
+  if (!m) return null;
+  const raw = m[1].toLowerCase();
+  const type = (raw === 'jpeg' || raw === 'jpg' ? 'jpg' : raw === 'png' ? 'png' : raw === 'gif' ? 'gif' : 'bmp') as
+    | 'jpg'
+    | 'png'
+    | 'gif'
+    | 'bmp';
+  return { type, data: Buffer.from(m[2], 'base64') };
+}
+
 /**
- * Builds an authentic, fully editable Microsoft Word (.docx) document from DocumentAST
+ * Visual Twin DOCX: page 1 = exact photo (logo/stamp/signature), then editable transcript.
  */
 export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
   const children: (Paragraph | Table)[] = [];
 
-  // Title / Court Caption
-  if (ast.caption) {
+  const imageSource = ast.embedImageUrl || ast.originalImageUrl;
+  const parsed = imageSource ? parseDataUrl(imageSource) : null;
+
+  if (parsed) {
+    const maxWidthPx = 520;
+    const srcW = ast.embedImageWidth || 1200;
+    const srcH = ast.embedImageHeight || 1600;
+    const width = maxWidthPx;
+    const height = Math.max(200, Math.round((maxWidthPx * srcH) / srcW));
+
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+        children: [
+          new TextRun({
+            text: 'LEXMORPH VISUAL TWIN — ORIGINAL SCAN (1:1)',
+            bold: true,
+            size: 18,
+            font: 'Arial',
+            color: '166534',
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+        children: [
+          new ImageRun({
+            type: parsed.type,
+            data: parsed.data,
+            transformation: { width, height },
+            altText: {
+              title: 'Original document scan',
+              description: 'Exact photo twin including logo, stamp, and signature',
+              name: 'visual-twin',
+            },
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 320 },
+        children: [
+          new TextRun({
+            text: `${ast.jurisdiction} · Logo, seal, and handwriting preserved from the photograph`,
+            size: 16,
+            font: 'Arial',
+            italics: true,
+            color: '64748B',
+          }),
+        ],
+      }),
+      new Paragraph({ children: [new PageBreak()] })
+    );
+  }
+
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+      children: [
+        new TextRun({
+          text: 'EDITABLE TRANSCRIPT',
+          bold: true,
+          size: 22,
+          font: 'Arial',
+          color: '334155',
+        }),
+      ],
+    }),
+    new Paragraph({
+      spacing: { after: 240 },
+      children: [
+        new TextRun({
+          text: 'Correct any OCR mistakes below. The scan on the previous page is the authoritative visual copy.',
+          size: 18,
+          font: 'Arial',
+          color: '64748B',
+        }),
+      ],
+    })
+  );
+
+  if (ast.caption?.courtName?.trim() && ast.caption?.plaintiff?.trim()) {
     children.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
@@ -28,7 +125,7 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
           new TextRun({
             text: ast.caption.courtName,
             bold: true,
-            size: 26, // 13pt
+            size: 26,
             font: 'Times New Roman',
           }),
         ],
@@ -47,7 +144,6 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
       })
     );
 
-    // Caption Table (Plaintiff vs Defendant & Index No)
     children.push(
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
@@ -66,13 +162,17 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
                 width: { size: 60, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: ast.caption.plaintiff, bold: true, font: 'Times New Roman' })],
+                    children: [
+                      new TextRun({ text: ast.caption.plaintiff, bold: true, font: 'Times New Roman' }),
+                    ],
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: '-against-', bold: true, font: 'Times New Roman' })],
+                    children: [new TextRun({ text: '-against-', italics: true, font: 'Times New Roman' })],
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: ast.caption.defendant, bold: true, font: 'Times New Roman' })],
+                    children: [
+                      new TextRun({ text: ast.caption.defendant, bold: true, font: 'Times New Roman' }),
+                    ],
                   }),
                 ],
               }),
@@ -80,10 +180,13 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
                 width: { size: 40, type: WidthType.PERCENTAGE },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: `Index No: ${ast.caption.indexNumber}`, bold: true, font: 'Times New Roman' })],
-                  }),
-                  new Paragraph({
-                    children: [new TextRun({ text: `Address: ${ast.metadata.propertyAddress || 'Subject Premises'}`, font: 'Times New Roman' })],
+                    children: [
+                      new TextRun({
+                        text: `Index No: ${ast.caption.indexNumber}`,
+                        bold: true,
+                        font: 'Times New Roman',
+                      }),
+                    ],
                   }),
                 ],
               }),
@@ -92,8 +195,7 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
         ],
       })
     );
-  } else {
-    // Standard Document Title
+  } else if (!parsed) {
     children.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
@@ -110,17 +212,16 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
     );
   }
 
-  // Document Sections
   for (const section of ast.sections) {
     if (section.title) {
       children.push(
         new Paragraph({
-          spacing: { before: 200, after: 100 },
+          spacing: { before: 160, after: 80 },
           children: [
             new TextRun({
               text: section.title,
               bold: true,
-              size: 24,
+              size: 22,
               font: 'Times New Roman',
             }),
           ],
@@ -129,26 +230,31 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
     }
 
     if (section.type === 'table' && section.tableData) {
-      const rows: TableRow[] = [];
-      // Header row
-      rows.push(
+      const rows: TableRow[] = [
         new TableRow({
           children: section.tableData.headers.map(
             (h) =>
               new TableCell({
-                children: [new Paragraph({ children: [new TextRun({ text: h, bold: true, font: 'Times New Roman' })] })],
+                children: [
+                  new Paragraph({
+                    children: [new TextRun({ text: h, bold: true, font: 'Times New Roman' })],
+                  }),
+                ],
               })
           ),
-        })
-      );
-      // Data rows
+        }),
+      ];
       for (const row of section.tableData.rows) {
         rows.push(
           new TableRow({
             children: row.map(
               (cell) =>
                 new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: cell, font: 'Times New Roman' })] })],
+                  children: [
+                    new Paragraph({
+                      children: [new TextRun({ text: cell, font: 'Times New Roman' })],
+                    }),
+                  ],
                 })
             ),
           })
@@ -158,7 +264,7 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
     } else {
       children.push(
         new Paragraph({
-          spacing: { after: 140 },
+          spacing: { after: 100 },
           children: [
             new TextRun({
               text: section.content,

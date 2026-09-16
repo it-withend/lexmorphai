@@ -5,6 +5,8 @@ import Navbar from '@/components/Navbar';
 import { SAMPLE_CASES } from '@/lib/samples';
 import { DocumentAST } from '@/lib/types';
 import { extractTextFromImage } from '@/lib/ocr-client';
+import { prepareImageForEmbed, prepareImageForOcr } from '@/lib/image-prep';
+import { buildAstFromOcrText } from '@/lib/ocr-ast';
 import DualPaneViewer from '@/components/DualPaneViewer';
 import RedFlagSidebar from '@/components/RedFlagSidebar';
 import CounterActionModal from '@/components/CounterActionModal';
@@ -58,12 +60,11 @@ const SAMPLE_META = [
 ];
 
 const ANALYSIS_STEPS = [
-  'Reading text from your photo (on-device OCR)…',
-  'Reconstructing editable document sections…',
-  'Cross-checking statutory rules…',
-  'Flagging procedural defects…',
-  'Computing defense viability…',
-  'Opening living document editor…',
+  'Preparing photo for visual twin…',
+  'Reading text from your photo (OCR)…',
+  'Preserving logo, stamp & signature from scan…',
+  'Building editable transcript lines…',
+  'Opening Visual Twin canvas…',
 ];
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -71,6 +72,7 @@ const SOURCE_LABELS: Record<string, string> = {
   'groq-vision': 'Groq vision (free)',
   'groq-text': 'Groq + OCR (free)',
   'ocr-rules': 'On-device OCR + rules',
+  visual_twin: 'Visual Twin (photo 1:1 + OCR)',
   sample: 'Curated demo sample',
 };
 
@@ -123,42 +125,77 @@ export default function StudioPage() {
           setAnalysisSource('sample');
         }
       } else if (imageBase64) {
-        setAnalysisDetail('Extracting text from photo on your device…');
-        let ocrText = '';
+        // Visual Twin path: keep the photo 1:1 (logo/stamp/signature), OCR only for editable text
+        setAnalysisDetail('Preparing photo for visual twin…');
+        const prepared = await prepareImageForOcr(imageBase64);
+        const embed = await prepareImageForEmbed(imageBase64);
+
+        setAnalysisDetail('Reading text from photo (on-device OCR)…');
+        let ocr = { text: '', lines: [] as { text: string; confidence: number }[], meanConfidence: 0 };
         try {
-          ocrText = await extractTextFromImage(imageBase64, (status, progress) => {
+          ocr = await extractTextFromImage(prepared.ocrDataUrl, (status, progress) => {
             setAnalysisDetail(`${status} ${progress}%`);
             if (progress > 20) setAnalysisStep(1);
             if (progress > 60) setAnalysisStep(2);
           });
         } catch (ocrErr) {
           console.warn('OCR failed', ocrErr);
-          setAnalysisDetail('OCR struggled — trying cloud vision if a free key is available…');
+          throw new Error(
+            'Could not read text from this photo. Try a flatter, brighter shot without glare.'
+          );
         }
 
-        const keys = getStoredKeys();
-        setAnalysisDetail('Building editable document…');
-        setAnalysisStep(3);
+        if (!ocr.text || ocr.text.length < 12) {
+          throw new Error('Not enough readable text. Retake the photo closer and flatter.');
+        }
 
-        const res = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageBase64,
-            rawText: ocrText || undefined,
-            apiKey: keys.gemini,
-            groqApiKey: keys.groq,
-          }),
+        setAnalysisDetail('Building visual twin (photo + editable transcript)…');
+        setAnalysisStep(4);
+
+        const hasCyrillic = /[\u0400-\u04FF]/.test(ocr.text);
+        let ast = buildAstFromOcrText(ocr.text, {
+          imageUrl: imageBase64,
+          embedImageUrl: embed.dataUrl,
+          embedWidth: embed.width,
+          embedHeight: embed.height,
+          lines: ocr.lines,
+          ocrConfidence: ocr.meanConfidence,
         });
-        const data = await res.json();
-        if (!res.ok || !data.success || !data.ast) {
-          throw new Error(data.error || 'Analysis failed');
+
+        // Optional: US docs can still ask the API to enrich statutory defects
+        const keys = getStoredKeys();
+        if (!hasCyrillic && (keys.gemini || keys.groq)) {
+          try {
+            const res = await fetch('/api/analyze', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                imageBase64: prepared.ocrDataUrl,
+                rawText: ocr.text,
+                apiKey: keys.gemini,
+                groqApiKey: keys.groq,
+              }),
+            });
+            const data = await res.json();
+            if (data.success && data.ast?.defects?.length) {
+              ast = {
+                ...ast,
+                defects: data.ast.defects,
+                audit: { ...ast.audit, ...data.ast.audit, actionSteps: ast.audit.actionSteps },
+              };
+              if (data.warning) setAnalysisWarning(data.warning);
+            }
+          } catch {
+            /* keep visual twin */
+          }
         }
 
-        setCurrentAST({ ...data.ast, originalImageUrl: imageBase64 });
+        setCurrentAST(ast);
         setSelectedSampleId('');
-        setAnalysisSource(data.source || 'ocr-rules');
-        if (data.warning) setAnalysisWarning(data.warning);
+        setAnalysisSource('visual_twin');
+        setAnalysisWarning(
+          `Visual Twin: original photo is preserved 1:1 (logo, stamp, signature). OCR transcript ~${ocr.meanConfidence}% — edit lines that look wrong.`
+        );
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Analysis failed';
@@ -227,9 +264,9 @@ export default function StudioPage() {
           {/* How it works */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { Icon: Camera, title: '1. Snap or upload', body: 'Phone photo of eviction notice, lease, or summons' },
-              { Icon: ScanText, title: '2. OCR + rules', body: 'Text extracted locally, then audited against statutes' },
-              { Icon: Wand2, title: '3. Edit & export', body: 'Fix text in-place, download .docx, generate Answer' },
+              { Icon: Camera, title: '1. Snap or upload', body: 'Phone photo keeps logo, stamp & signature 1:1' },
+              { Icon: ScanText, title: '2. Visual Twin', body: 'Exact scan + editable OCR transcript underneath' },
+              { Icon: Wand2, title: '3. Export Word', body: 'DOCX page 1 = photo twin; next pages = editable text' },
             ].map(({ Icon, title, body }) => (
               <div key={title} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 flex gap-3">
                 <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 shrink-0">

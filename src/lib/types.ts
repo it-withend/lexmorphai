@@ -76,7 +76,14 @@ export interface DocumentAST {
   title: string;
   documentType: DocumentType;
   jurisdiction: string;
+  /** Full photo of the paper — this is the true 1:1 visual twin (logo, stamp, signature). */
   originalImageUrl?: string;
+  /** Compressed embed used for Word export (set client-side). */
+  embedImageUrl?: string;
+  embedImageWidth?: number;
+  embedImageHeight?: number;
+  ocrConfidence?: number;
+  reconstructionMode?: 'visual_twin' | 'sample' | 'ai_ast';
   caption?: CourtCaption;
   metadata: {
     dateIssued: string;
