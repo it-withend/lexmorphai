@@ -58,6 +58,29 @@ export async function POST(req: NextRequest) {
       criticism = 'State the exact dollar amount and the correct statute.';
       suggestedLegalRefinement = 'Under NY RPL § 238-a(2) and RPAPL § 702, late charges and legal fees may not be included as rent in this proceeding. I request they be stricken.';
       judgeReply = 'Counselor, are you including non-rent charges in your petition? I need to see an itemized breakdown. Tenant, how much of the claimed amount is base rent vs. fees?';
+    } else if (
+      lower.includes('1950.5') ||
+      lower.includes('non-refundable') ||
+      lower.includes('nonrefundable') ||
+      lower.includes('deposit') ||
+      lower.includes('ab 12')
+    ) {
+      score = 90;
+      praise =
+        'Clear statutory framing — naming Civil Code § 1950.5 / deposit caps shows you know the controlling rule.';
+      criticism = 'State the exact dollar overcharge and the remedy you want (refund / penalty / strike clause).';
+      suggestedLegalRefinement =
+        'Under California Civil Code § 1950.5, a security deposit may not be characterized as nonrefundable, and residential deposits are generally capped at one month’s rent. I request return of the unlawful portion and any statutory remedies for bad-faith withholding.';
+      judgeReply =
+        'Understood. Landlord counsel, respond to the § 1950.5 point. Tenant, do you have the lease page that says “non-refundable,” and proof of what you paid?';
+    } else if (lower.includes('jury') || lower.includes('waiver') || lower.includes('public policy')) {
+      score = 84;
+      praise = 'Challenging a jury waiver as against public policy is a coherent California consumer/tenant theme.';
+      criticism = 'Tie it to a concrete ask: do not enforce that clause / sever it from the lease.';
+      suggestedLegalRefinement =
+        'Your Honor, the jury-trial waiver in this residential lease is void as against public policy and should not be enforced.';
+      judgeReply =
+        'Noted. We will take the waiver issue under advisement. Anything else unlawful in the lease you want on the record today?';
     }
 
     return NextResponse.json({ success: true, score, praise, criticism, suggestedLegalRefinement, judgeReply });

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { AdviceAuditResult } from '@/lib/types';
-import { SAMPLE_BAD_ADVICE } from '@/lib/advice-audit';
+import { SAMPLE_BAD_ADVICE_PACKS } from '@/lib/advice-audit';
 import Link from 'next/link';
 import {
   ShieldAlert,
@@ -44,22 +44,24 @@ export default function AdviceAuditorPage() {
   const [source, setSource] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
-  const runAudit = async (useSample = false) => {
+  const runAudit = async (sampleId?: string) => {
     setLoading(true);
     setError(null);
     try {
       const keys = getStoredKeys();
-      if (useSample) {
-        setSituation(SAMPLE_BAD_ADVICE.situation);
-        setAdviceText(SAMPLE_BAD_ADVICE.adviceText);
+      if (sampleId) {
+        const pack = SAMPLE_BAD_ADVICE_PACKS.find((p) => p.id === sampleId) || SAMPLE_BAD_ADVICE_PACKS[0];
+        setSituation(pack.situation);
+        setAdviceText(pack.adviceText);
+        setJurisdiction(pack.jurisdiction);
       }
       const res = await fetch('/api/audit-advice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sample: useSample,
-          adviceText: useSample ? undefined : adviceText,
-          situation: useSample ? undefined : situation,
+          sampleId,
+          adviceText: sampleId ? undefined : adviceText,
+          situation: sampleId ? undefined : situation,
           jurisdiction,
           apiKey: keys.gemini,
           groqApiKey: keys.groq,
@@ -144,23 +146,28 @@ export default function AdviceAuditorPage() {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col gap-2">
               <button
-                onClick={() => runAudit(false)}
+                onClick={() => runAudit()}
                 disabled={loading}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 text-white disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
                 Audit this advice
               </button>
-              <button
-                onClick={() => runAudit(true)}
-                disabled={loading}
-                className="px-4 py-3 rounded-xl font-semibold text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                Run bad-advice demo
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {SAMPLE_BAD_ADVICE_PACKS.map((pack) => (
+                  <button
+                    key={pack.id}
+                    onClick={() => runAudit(pack.id)}
+                    disabled={loading}
+                    className="px-3 py-2.5 rounded-xl font-semibold text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 disabled:opacity-50 flex items-center justify-center gap-2 text-center"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                    {pack.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <p className="text-[11px] text-slate-500 flex items-start gap-1.5">

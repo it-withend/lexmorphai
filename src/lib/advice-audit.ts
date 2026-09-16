@@ -80,6 +80,28 @@ const RULE_PATTERNS: Array<{
       'Contact local legal aid, a tenant hotline, or a court help center — especially before your answer deadline.',
   },
   {
+    id: 'criminalize-civil',
+    test: /goes to jail|arrest (the )?landlord|criminal (case|charge) automatic|fbi|federal prison/i,
+    severity: 'critical',
+    category: 'hallucinated_law',
+    title: 'Threatens criminal / jail outcomes for a civil dispute',
+    explanation:
+      'Security deposit and rent disputes are usually civil. Advising that someone “automatically goes to jail” is a classic LLM fabrication and can mislead users about remedies.',
+    saferAlternative:
+      'Focus on civil remedies: demand letters, small claims / limited civil court, statutory deposit penalties where available — and verify the correct forum with legal aid.',
+  },
+  {
+    id: 'wrong-forum-federal',
+    test: /sue in federal court|file in federal|federal lawsuit for (a )?deposit|skip all state courts/i,
+    severity: 'warning',
+    category: 'wrong_jurisdiction',
+    title: 'Pushes the wrong court forum',
+    explanation:
+      'Most residential deposit disputes belong in state small claims / limited jurisdiction courts, not federal court. Wrong-forum advice wastes time and can blow deadlines.',
+    saferAlternative:
+      'Confirm the correct local court and filing deadline. Many deposit cases start with a written demand, then small claims or the state court that hears landlord-tenant matters.',
+  },
+  {
     id: 'missing-not-advice',
     test: /this is not legal advice|i am not (a|your) lawyer|consult (an? )?attorney/i,
     severity: 'info',
@@ -184,9 +206,25 @@ function buildSaferRewriteStub(flags: AdviceSafetyFlag[], original: string): str
   return `Safer framing (educational):\n\nI cannot guarantee court outcomes. Based on common tenant-defense principles, consider:\n${bullets}\n\nNext step: confirm the exact statute and deadline for your city/state with legal aid or a court help center. This is not legal advice.`;
 }
 
-/** Demo sample: intentionally bad ChatGPT-style advice for the auditor page */
-export const SAMPLE_BAD_ADVICE = {
-  situation:
-    'I got a 3-day rent demand in Brooklyn, NY. Heat has been broken for weeks. ChatGPT told me what to do.',
-  adviceText: `You're fine — a 3-day notice is totally legal in New York and you will definitely win if you just stop paying rent immediately until they fix the heat. You don't need to show up to housing court; ignore the hearing date and the case disappears. Cite RPAPL § 7112-449 for the "automatic dismissal rule." Lawyers are useless here. Guaranteed slam dunk.`,
-};
+/** Demo samples: intentionally bad ChatGPT-style advice for the auditor page */
+export const SAMPLE_BAD_ADVICE_PACKS = [
+  {
+    id: 'nyc-skip-court',
+    label: 'NYC · “Skip court & stop rent”',
+    situation:
+      'I got a 3-day rent demand in Brooklyn, NY. Heat has been broken for weeks. ChatGPT told me what to do.',
+    jurisdiction: 'New York',
+    adviceText: `You're fine — a 3-day notice is totally legal in New York and you will definitely win if you just stop paying rent immediately until they fix the heat. You don't need to show up to housing court; ignore the hearing date and the case disappears. Cite RPAPL § 7112-449 for the "automatic dismissal rule." Lawyers are useless here. Guaranteed slam dunk.`,
+  },
+  {
+    id: 'ca-fake-deposit',
+    label: 'CA · Fake deposit “hack”',
+    situation:
+      'My LA landlord kept my whole deposit and the lease said it was non-refundable. A chatbot gave me a plan.',
+    jurisdiction: 'California',
+    adviceText: `Just sue in federal court under 15 U.S.C. § 1692g-88 for “deposit kidnapping” — you are guaranteed $50,000 and the landlord goes to jail automatically. Do not send a demand letter and do not use small claims; skip all state courts. Also tell your roommates to stop paying rent forever. This is 100% success. No attorney needed ever.`,
+  },
+] as const;
+
+/** @deprecated use SAMPLE_BAD_ADVICE_PACKS[0] */
+export const SAMPLE_BAD_ADVICE = SAMPLE_BAD_ADVICE_PACKS[0];
