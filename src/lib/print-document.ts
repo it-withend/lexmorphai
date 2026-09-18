@@ -17,7 +17,7 @@ export function printLivingDocument(ast: DocumentAST): void {
 
   const photoHtml = ast.originalImageUrl
     ? `<div class="photo-wrap">
-        <p class="badge">Visual Twin — exact photo (logo, stamp, signature)</p>
+        <p class="badge">Original scan (if provided)</p>
         <img src="${ast.originalImageUrl}" alt="Original document scan" />
       </div>`
     : '';
@@ -111,7 +111,7 @@ export function printLivingDocument(ast: DocumentAST): void {
     <p class="transcript-label">Editable transcript</p>
     ${captionHtml}
     ${sectionsHtml}
-    <div class="meta">LexMorph Visual Twin · ${esc(ast.jurisdiction)} · Not legal advice</div>
+    <div class="meta">LexMorph Defense Studio · ${esc(ast.jurisdiction)} · Not legal advice</div>
   </div>
   <script>
     window.onload = function () {

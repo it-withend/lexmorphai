@@ -257,7 +257,8 @@ export default function AdviceAuditorPage() {
                     </button>
                   </div>
                   <pre className="whitespace-pre-wrap text-xs text-slate-300 leading-relaxed font-sans">
-                    {result.saferRewrite}
+                    {result.saferRewrite ||
+                      'No rewrite returned — still treat chatbot advice as unverified. Prefer legal-aid / court self-help materials for your jurisdiction.'}
                   </pre>
                 </div>
 
@@ -267,7 +268,14 @@ export default function AdviceAuditorPage() {
                     Verification checklist
                   </h2>
                   <ul className="space-y-1.5 text-xs text-slate-400">
-                    {result.checklist.map((c) => (
+                    {(result.checklist?.length
+                      ? result.checklist
+                      : [
+                          'Verify every statute citation on a primary source before repeating it.',
+                          'Do not skip a hearing date based on chatbot advice.',
+                          'Contact a legal aid clinic if you have a court date.',
+                        ]
+                    ).map((c) => (
                       <li key={c} className="flex gap-2">
                         <span className="text-emerald-500">•</span>
                         {c}

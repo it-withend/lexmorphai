@@ -25,64 +25,66 @@ Most tenants lose on procedure, not on the merits — and many now trust chatbot
 LexMorph ships three connected tools:
 
 1. **Defense Studio** (`/studio`)  
-   Curated NY/CA cases or pasted notice/lease text → living editable document → statutory red flags → 1-click Verified Answer export (`.docx`).
+   Curated NY/CA cases or pasted notice/lease text → living editable document → statutory red flags (rules + optional LLM) → 1-click Answer export (`.docx`).
 
 2. **Hearing Coach** (`/simulator`)  
-   Three scenarios (NYC notice defect, habitability abatement, CA deposit traps). Practice answers, get scores + better statutory phrasing.
+   Three scenarios (NYC notice defect, habitability abatement, CA deposit traps). Practice answers, get scored feedback + statute-aware phrasing. Studio case context carries over.
 
 3. **Advice Auditor** (`/auditor`) — AI Safety track  
-   Paste ChatGPT-style advice. Deterministic danger rules + optional LLM enrichment flag overconfidence, fake citations, “skip court,” etc., then produce a safer educational rewrite.
+   Paste ChatGPT-style advice. Deterministic danger rules + optional LLM enrichment flag overconfidence, fake citations, “skip court,” etc., then produce a safer educational rewrite + checklist (works offline).
 
 ---
 
 ## How it works (user flow)
-1. Open Studio → **NYC Eviction Notice** demo  
-2. Review red flags (RPAPL § 711, habitability, illegal fees)  
-3. **Generate Official Court Answer** → download Word  
-4. **Practice this case in Court** → click a recommended argument  
-5. Open Auditor → run **NYC skip-court** or **CA fake deposit** demo → show risk score  
+1. Open Studio → **NYC Eviction Notice** demo (or “I’m scared” path)  
+2. Review red flags (plain English first; statutes secondary)  
+3. **Generate Court Answer** → download Word  
+4. **Practice this Answer in Hearing Coach** → cite RPAPL § 711 / 14-day  
+5. Open Auditor → **NYC skip-court** demo → risk score + safer rewrite  
 
 ---
 
-## Tech stack
-- **Frontend/App:** Next.js 16, React 19, TypeScript, Tailwind CSS 4  
-- **LLMs (optional):** Groq (free-tier models), Google Gemini  
-- **Offline reliability:** Curated sample cases + deterministic statutory / safety rule engines  
-- **Export:** `docx` (court-ish Verified Answer)  
-- **Deploy:** Vercel  
+## Tech stack & AI disclosure
+- **App:** Next.js 16, React 19, TypeScript, Tailwind CSS 4  
+- **LLMs (optional):** Groq (`openai/gpt-oss-*`, Qwen) primary free path; Google Gemini optional  
+- **Offline reliability:** Curated sample cases + deterministic statutory / advice-safety rule engines  
+- **Export:** `docx` library (court-style Answer draft)  
+- **Deploy:** Vercel (`https://lexmorphai.vercel.app`)  
+- **AI code tools:** Cursor / Copilot-style assistants may have been used during development; core product logic (rules KB, Studio/Hearing/Auditor flows) is team-owned and explainable.
 
 ## APIs / keys
-- Works for judging **without** paid Google billing.  
+- Judging works **without** paid Google billing (samples + rules).  
 - Optional `GROQ_API_KEY` / `GEMINI_API_KEY` deepen AI turns.  
-- Advice Auditor and Studio demos degrade gracefully to rules/samples.
+- Prefer Production+Preview env + redeploy. Health: `/api/ai-status`.
 
 ## What’s original
 - End-to-end **defense loop** (audit → pleading → oral prep) instead of a generic chatbot.  
 - Explicit **AI Safety auditor for legal advice** aimed at chatbot harm modes common in access-to-justice.  
-- Honest product boundary: no brittle “1:1 photo reconstruction” claim.
+- Honest product boundary: educational prototype — **not** an “AI lawyer” and **not** brittle 1:1 photo reconstruction as the hero claim.
 
 ## Challenges
-- Balancing AI creativity with **hallucination risk** in a legal context.  
+- Balancing AI creativity with **hallucination risk** in a legal context (rules-first + Hearing guardrails).  
 - Keeping demos reliable offline for judges.  
-- Designing for non-lawyers without overclaiming “legal advice.”
+- Designing for non-lawyers without overclaiming outcomes.
 
 ## Accomplishments
 - Working Studio + Answer export + Hearing Coach scenarios + Advice Auditor.  
 - Dual-track narrative (A2J + AI Safety) with one coherent product story.  
-- Deployed prototype on Vercel.
+- Deployed prototype; P0 reliability fixes for paste defects, simulate validation, notice-period guardrails, and viability bands.
 
 ## What’s next
-- More jurisdictions / clinic partnerships  
+- Clinic partnerships / more jurisdictions **after** core loop is solid  
+- Citation link-outs to primary law  
 - Multilingual plain-English explanations  
-- Deeper citation verification against primary-law sources  
-- LexHack Builders Fellowship deployment support
+- LexHack Builders Fellowship deployment support  
 
 ## Team
 _Add names / roles_
 
 ## Links
-- **Live app:** https://lexmorphai-azamat2009s-projects.vercel.app  
+- **Live app:** https://lexmorphai.vercel.app  
 - **Repo:** https://github.com/it-withend/lexmorphai  
+- **P0 smoke notes:** `docs/P0_TEST_NOTES.md`
 
 ---
 
@@ -94,7 +96,7 @@ _Add names / roles_
 **[0:20–1:10] Studio**  
 Screen: Landing → Studio → click **NYC Eviction Notice**.  
 Show red flags (3-day vs 14-day, habitability, fees).  
-Click **Generate Official Court Answer** → toggle a defense → download `.docx`.  
+Click **Generate Court Answer** → toggle a defense → download `.docx`.  
 Say: “This is the Access to Justice loop — plain English plus court-formatted output.”
 
 **[1:10–1:55] Hearing Coach**  

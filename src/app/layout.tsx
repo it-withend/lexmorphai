@@ -13,18 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'LexMorph AI — Living Legal Document Engine & Pro Se Justice',
+  title: 'LexMorph AI — Defense Studio for LexHack 2026',
   description:
-    'LexMorph Defense Studio: audit notices & leases, draft court Answers, rehearse hearings, and stress-test unsafe ChatGPT legal advice.',
+    'Audit notices & leases, draft court Answers, rehearse hearings, and stress-test unsafe ChatGPT legal advice. Access to Justice + AI Safety.',
   keywords: [
     'Legal Tech',
     'LexHack 2026',
     'Access to Justice',
     'Civic Tech',
-    'Document Reconstruction',
+    'AI Safety',
     'Eviction Defense',
     'Pro Se Litigant',
-    'DOCX Generator',
+    'Advice Auditor',
   ],
 };
 
