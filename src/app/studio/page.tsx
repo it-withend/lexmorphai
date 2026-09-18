@@ -36,7 +36,7 @@ const SAMPLE_META = [
     subtitle: 'Defective 3-day notice, illegal fees',
     jurisdiction: 'New York (Kings County)',
     defects: 3,
-    score: 96,
+    band: 'Strong possible defenses',
     color: 'border-amber-500/40 hover:border-amber-400',
     badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     iconWrap: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
@@ -48,7 +48,7 @@ const SAMPLE_META = [
     subtitle: 'Illegal deposit, void jury waiver',
     jurisdiction: 'California (Los Angeles)',
     defects: 2,
-    score: 91,
+    band: 'Strong possible defenses',
     color: 'border-blue-500/40 hover:border-blue-400',
     badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     iconWrap: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -202,6 +202,43 @@ export default function StudioPage() {
             </p>
           </div>
 
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/80 to-slate-900 border border-amber-500/25 space-y-3">
+            <p className="text-sm font-bold text-amber-100 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              I got a notice and I&apos;m scared — start here
+            </p>
+            <p className="text-xs text-slate-400">
+              Three safe paths. No lawyer required to explore. Educational only — not legal advice.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button
+                onClick={() => runAnalysis({ sampleId: 'nyc-eviction-14day-defect' })}
+                className="px-4 py-3 rounded-2xl bg-slate-950/80 border border-amber-500/30 text-left hover:border-amber-400/60 transition-colors"
+              >
+                <p className="text-sm font-semibold text-white">NYC eviction demo</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Defective 3-day notice walkthrough</p>
+              </button>
+              <button
+                onClick={() => {
+                  const el = document.getElementById('paste-document');
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  (el as HTMLTextAreaElement | null)?.focus();
+                }}
+                className="px-4 py-3 rounded-2xl bg-slate-950/80 border border-slate-700 text-left hover:border-emerald-500/50 transition-colors"
+              >
+                <p className="text-sm font-semibold text-white">Paste my notice</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">We flag issues in plain English</p>
+              </button>
+              <Link
+                href="/auditor"
+                className="px-4 py-3 rounded-2xl bg-slate-950/80 border border-violet-500/30 text-left hover:border-violet-400/60 transition-colors"
+              >
+                <p className="text-sm font-semibold text-white">Audit chatbot advice</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Catch &quot;skip court&quot; harm</p>
+              </Link>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { Icon: BookOpen, title: '1. Pick or paste', body: 'Curated cases or your document text' },
@@ -237,6 +274,7 @@ export default function StudioPage() {
               Paste document text (notice, lease, demand)
             </div>
             <textarea
+              id="paste-document"
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
               rows={8}
@@ -311,7 +349,7 @@ export default function StudioPage() {
                   {s.jurisdiction}
                 </p>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-emerald-400 font-semibold">{s.score}% defense viability</span>
+                  <span className="text-xs text-emerald-400 font-semibold">{s.band}</span>
                   <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
                 </div>
               </button>

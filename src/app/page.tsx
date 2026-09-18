@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import SiteFooter from '@/components/SiteFooter';
 import {
   Scale,
   Sparkles,
@@ -17,6 +18,7 @@ import {
   Mic2,
   BadgeCheck,
   Download,
+  AlertTriangle,
 } from 'lucide-react';
 
 const HERO_STATS = [
@@ -83,6 +85,38 @@ export default function LandingPage() {
               <Shield className="w-4 h-4 text-violet-400" />
               Advice Auditor
             </Link>
+          </div>
+
+          <div className="max-w-3xl mx-auto pt-2">
+            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-left space-y-3">
+              <p className="text-xs font-semibold text-amber-200 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Got a notice? Three one-click starts
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Link
+                  href="/studio"
+                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-amber-500/40"
+                >
+                  <span className="font-semibold text-white block">NYC demo</span>
+                  Open Studio → Eviction Notice
+                </Link>
+                <Link
+                  href="/studio"
+                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-emerald-500/40"
+                >
+                  <span className="font-semibold text-white block">Paste text</span>
+                  Analyze your notice in Studio
+                </Link>
+                <Link
+                  href="/auditor"
+                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-violet-500/40"
+                >
+                  <span className="font-semibold text-white block">Audit ChatGPT</span>
+                  Catch unsafe “skip court” advice
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-800/80 text-left">
@@ -221,6 +255,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <SiteFooter />
     </div>
   );
 }

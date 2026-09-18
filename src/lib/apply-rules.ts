@@ -60,16 +60,16 @@ export function enrichAstWithRules(ast: DocumentAST, sourceText?: string): Docum
     merged.length === 0
       ? Math.max(35, ast.audit.defenseViabilityScore)
       : Math.min(
-          98,
+          92,
           Math.round(
             merged.reduce((sum, d) => sum + d.dismissalImpactPercentage, 0) / merged.length
           )
         );
 
   const viabilityGrade =
-    score >= 85
+    score >= 80
       ? 'Strong Dismissal Grounds'
-      : score >= 70
+      : score >= 65
         ? 'Viable Counterclaims'
         : score >= 50
           ? 'Moderate Defense'
@@ -83,21 +83,21 @@ export function enrichAstWithRules(ast: DocumentAST, sourceText?: string): Docum
             stepNumber: 1,
             title: 'Save your editable document',
             deadline: 'Today',
-            description: 'Download the reconstructed Word (.docx) file and keep a copy of the original photo.',
+            description: 'Download the Word (.docx) file and keep a copy of the original notice.',
             urgent: true,
           },
           {
             stepNumber: 2,
             title: 'Generate your court Answer',
             deadline: 'Before your response deadline',
-            description: 'Use Generate Official Court Answer to draft affirmative defenses from the flagged defects.',
+            description: 'Use Generate Court Answer to draft affirmative defenses from the flagged defects.',
             urgent: true,
           },
           {
             stepNumber: 3,
             title: 'Practice your hearing',
             deadline: 'Before court date',
-            description: 'Open the Hearing Simulator and rehearse speaking your defenses out loud.',
+            description: 'Open the Hearing Coach and rehearse speaking your defenses out loud.',
             urgent: false,
           },
         ];
