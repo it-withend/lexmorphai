@@ -12,6 +12,7 @@ import {
   Gavel,
 } from 'lucide-react';
 import { HEARING_SCENARIOS, getScenario, HearingScenario } from '@/lib/hearing-scenarios';
+import { getActiveCaseContext, getStudioCaseTitle } from '@/lib/case-context';
 
 interface Turn {
   id: string;
@@ -25,7 +26,10 @@ interface Turn {
 
 function pickInitialScenarioId(): string {
   if (typeof window === 'undefined') return 'nyc-notice';
-  const ctx = sessionStorage.getItem('lexmorph_case_context') || '';
+  const ctx =
+    sessionStorage.getItem('lexmorph_studio_case_context') ||
+    sessionStorage.getItem('lexmorph_case_context') ||
+    '';
   if (/california|1950\.5|deposit/i.test(ctx)) return 'ca-deposit';
   if (/habitability|heat|hot water|235-b/i.test(ctx) && !/3-day|711/i.test(ctx)) {
     return 'nyc-habitability';
@@ -42,10 +46,12 @@ export default function HearingSimulator() {
   const [overallScore, setOverallScore] = useState(70);
   const [aiEngine, setAiEngine] = useState<'unknown' | 'ai' | 'heuristic'>('unknown');
   const [aiModel, setAiModel] = useState<string>('');
+  const [studioTitle, setStudioTitle] = useState<string | null>(null);
 
   useEffect(() => {
     const id = pickInitialScenarioId();
     setScenarioId(id);
+    setStudioTitle(getStudioCaseTitle());
   }, []);
 
   useEffect(() => {
@@ -63,9 +69,11 @@ export default function HearingSimulator() {
     ]);
     setOverallScore(70);
     setUserInput('');
+    setStudioTitle(getStudioCaseTitle());
+    // Do NOT overwrite studio-carried context — only refresh active merge
     try {
-      sessionStorage.setItem('lexmorph_case_context', s.caseContext);
-      sessionStorage.setItem('lexmorph_case_title', s.title);
+      const merged = getActiveCaseContext(s.caseContext);
+      sessionStorage.setItem('lexmorph_case_context', merged);
     } catch {
       /* ignore */
     }
@@ -89,7 +97,7 @@ export default function HearingSimulator() {
         body: JSON.stringify({
           history: updatedHistory.map((t) => ({ speaker: t.speaker, text: t.text })),
           userResponse: text,
-          caseContext: scenario.caseContext,
+          caseContext: getActiveCaseContext(scenario.caseContext),
           apiKey:
             (typeof window !== 'undefined' && localStorage.getItem('lexmorph_gemini_key')) ||
             undefined,
@@ -183,6 +191,11 @@ export default function HearingSimulator() {
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">{scenario.title}</p>
+            {studioTitle && (
+              <p className="text-[11px] text-emerald-300/90 mt-1">
+                Carrying Studio case: <span className="font-semibold">{studioTitle}</span>
+              </p>
+            )}
             {aiEngine !== 'unknown' && (
               <p className="text-[11px] mt-1 flex items-center gap-1.5">
                 {aiEngine === 'ai' ? (

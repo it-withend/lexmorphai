@@ -27,7 +27,7 @@ function parseDataUrl(dataUrl: string): { type: 'jpg' | 'png' | 'gif' | 'bmp'; d
 }
 
 /**
- * Visual Twin DOCX: page 1 = exact photo (logo/stamp/signature), then editable transcript.
+ * Living-document DOCX: optional original scan page, then editable transcript.
  */
 export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
   const children: (Paragraph | Table)[] = [];
@@ -48,7 +48,7 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
         spacing: { after: 120 },
         children: [
           new TextRun({
-            text: 'LEXMORPH VISUAL TWIN — ORIGINAL SCAN (1:1)',
+            text: 'LEXMORPH — ORIGINAL SCAN (IF PROVIDED)',
             bold: true,
             size: 18,
             font: 'Arial',
@@ -66,8 +66,8 @@ export async function generateDocumentDocx(ast: DocumentAST): Promise<Buffer> {
             transformation: { width, height },
             altText: {
               title: 'Original document scan',
-              description: 'Exact photo twin including logo, stamp, and signature',
-              name: 'visual-twin',
+              description: 'Original document image when provided by the user',
+              name: 'document-scan',
             },
           }),
         ],

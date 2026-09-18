@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import { SAMPLE_CASES } from '@/lib/samples';
 import { DocumentAST } from '@/lib/types';
+import { persistStudioCase } from '@/lib/case-context';
 import DualPaneViewer from '@/components/DualPaneViewer';
 import RedFlagSidebar from '@/components/RedFlagSidebar';
 import CounterActionModal from '@/components/CounterActionModal';
@@ -84,22 +85,7 @@ export default function StudioPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const persistCaseForSimulator = (ast: DocumentAST) => {
-    try {
-      const ctx = [
-        `Jurisdiction: ${ast.jurisdiction}`,
-        `Document: ${ast.title} (${ast.documentType})`,
-        `Headline: ${ast.audit.summaryHeadline}`,
-        `Key findings: ${ast.audit.keyFindings.join('; ')}`,
-        `Top defenses: ${ast.defects
-          .slice(0, 3)
-          .map((d) => `${d.title} [${d.citation}]`)
-          .join('; ')}`,
-      ].join('\n');
-      sessionStorage.setItem('lexmorph_case_context', ctx);
-      sessionStorage.setItem('lexmorph_case_title', ast.title);
-    } catch {
-      /* ignore */
-    }
+    persistStudioCase(ast);
   };
 
   const runAnalysis = useCallback(async (opts: { sampleId?: string; rawText?: string }) => {
