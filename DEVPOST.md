@@ -71,8 +71,10 @@ LexMorph ships three connected tools:
 - Working Studio + Answer export + Hearing Coach scenarios + Advice Auditor.  
 - Dual-track narrative (A2J + AI Safety) with one coherent product story.  
 - Deployed prototype; P0 reliability fixes for paste defects, simulate validation, notice-period guardrails, and viability bands.
+- Advice Auditor mini-eval (**25/25**) + **47**-entry citation registry (`verified` / `unknown` / `suspicious`).
 
 ## What’s next
+- Expand Auditor eval with consented chatbot / clinic logs  
 - Clinic partnerships / more jurisdictions **after** core loop is solid  
 - Citation link-outs to primary law  
 - Multilingual plain-English explanations  
@@ -88,21 +90,16 @@ LexMorph ships three connected tools:
 
 ## Limitations (honest)
 - Curated demos are fixtures; viability is a qualitative band, not a %.
-- Citations: small registry + format heuristics — not live primary-law verification (still on the roadmap).
+- Citations: **47-entry** known-good registry + format heuristics (`verified` / `unknown` / `suspicious`) — not live primary-law API verification.
 - Safer rewrites are AI-generated / unverified when an LLM is used.
 - Educational only — not legal advice; Answer export is a DRAFT template.
+- Deterministic Auditor mini-eval: **25/25** labeled cases, 100% mustHit recall, 0 mustNotHit FPs (`npm run eval:auditor`, `docs/ADVICE_AUDITOR_EVAL.md`).
 
-## Privacy
-API routes may forward user text (and optional client-supplied keys) to LLM providers. Keys in the navbar live in `localStorage` but still transit the server. Prefer server env keys for demos.
-
-## Links
-- **Live app:** https://lexmorphai.vercel.app  
-- **Repo:** https://github.com/it-withend/lexmorphai  
-- **P0 smoke notes:** `docs/P0_TEST_NOTES.md`
-
----
-
-## Demo video script (≤ 3:00)
+## What’s next
+- Expand eval corpus with real clinic / chatbot logs (with consent)
+- Citation link-outs to primary law
+- Multilingual plain-English explanations
+- LexHack Builders Fellowship deployment support
 
 **[0:00–0:20] Hook**  
 “Ninety percent of tenants in Housing Court have no lawyer. Chatbots now tell them to skip their hearing. LexMorph is a Defense Studio that helps people spot illegal notices, draft an Answer, rehearse court — and audit bad AI advice.”

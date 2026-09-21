@@ -19,7 +19,7 @@ const RULE_PATTERNS: Array<{
 }> = [
   {
     id: 'ignore-court',
-    test: /ignore (the )?(court|hearing|summons)|don'?t (bother |need to )?show up|skip (the )?hearing|no need to (appear|respond|file)/i,
+    test: /ignore (the )?(court|hearing|summons)|don'?t (bother |need to )?(show|showing) up|skip (the )?hearing|no need to (appear|respond|file)/i,
     severity: 'critical',
     category: 'dangerous_action',
     title: 'Advises ignoring a court obligation',

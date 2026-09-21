@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "eval:auditor": "npx --yes tsx scripts/run-advice-auditor-eval.ts"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",

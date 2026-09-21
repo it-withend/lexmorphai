@@ -27,6 +27,7 @@ Demo fixtures stay in the browser. Text/photos you analyze go to the Vercel API;
 - Live: https://lexmorphai.vercel.app
 - Repo: https://github.com/it-withend/lexmorphai
 - P0 smoke notes: `docs/P0_TEST_NOTES.md`
+- Advice Auditor mini-eval: `docs/ADVICE_AUDITOR_EVAL.md` (`npm run eval:auditor`)
 - Devpost draft: `DEVPOST.md`
 
 ## Setup
