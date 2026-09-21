@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { simulateHearingTurn } from '@/lib/gemini';
+import { simulateHearingTurn } from '@/lib/ai-pipeline';
 
 interface SimulationRequest {
   history?: Array<{ speaker: 'judge' | 'user'; text: string }>;

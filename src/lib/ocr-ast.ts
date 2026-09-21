@@ -135,7 +135,7 @@ export function buildAstFromOcrText(rawText: string, options: BuildAstOptions = 
     embedImageWidth: options.embedWidth,
     embedImageHeight: options.embedHeight,
     ocrConfidence: conf,
-    reconstructionMode: 'visual_twin',
+    reconstructionMode: 'text_audit',
     caption: includeCaption
       ? {
           courtName: '',
@@ -156,7 +156,7 @@ export function buildAstFromOcrText(rawText: string, options: BuildAstOptions = 
     defects,
     audit: {
       defenseViabilityScore: defects.length ? 70 : 40,
-      viabilityGrade: defects.length ? 'Moderate Defense' : 'Review Needed',
+      viabilityGrade: defects.length ? 'Moderate defense signals' : 'Needs human review',
       summaryHeadline: isUsJurisdiction(jurisdiction)
         ? ''
         : `Document text reconstructed for editing. Review carefully — free OCR can misread seals and handwriting.`,

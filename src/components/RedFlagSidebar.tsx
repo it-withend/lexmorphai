@@ -55,9 +55,7 @@ export default function RedFlagSidebar({
         body: JSON.stringify({
           type: 'ast',
           data: ast,
-          filename: ast.originalImageUrl
-            ? 'lexmorph_living_document.docx'
-            : 'reconstructed_legal_document.docx',
+          filename: 'LexMorph_document.docx',
         }),
       });
       if (!res.ok) throw new Error('Export failed');
@@ -65,9 +63,7 @@ export default function RedFlagSidebar({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = ast.originalImageUrl
-        ? 'lexmorph_living_document.docx'
-        : 'reconstructed_legal_document.docx';
+      a.download = 'LexMorph_document.docx';
       document.body.appendChild(a);
       a.click();
       a.remove();

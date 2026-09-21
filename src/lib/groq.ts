@@ -17,13 +17,13 @@ export const GROQ_TEXT_MODELS = [
 /** Multimodal (image) models — Qwen 3.x on Groq accepts images */
 export const GROQ_VISION_MODELS = ['qwen/qwen3.8-27b', 'qwen/qwen3.6-27b'] as const;
 
-/** Prefer the Vercel/server key so visitors never need to paste one. */
-export function getServerGroqKey(clientKey?: string): string | undefined {
-  return process.env.GROQ_API_KEY || clientKey || undefined;
+/** Prefer Vercel/server keys only — visitors never supply keys. */
+export function getServerGroqKey(_clientKey?: string): string | undefined {
+  return process.env.GROQ_API_KEY || undefined;
 }
 
-export function getServerGeminiKey(clientKey?: string): string | undefined {
-  return process.env.GEMINI_API_KEY || clientKey || undefined;
+export function getServerGeminiKey(_clientKey?: string): string | undefined {
+  return process.env.GEMINI_API_KEY || undefined;
 }
 
 export function cleanJson(text: string): string {

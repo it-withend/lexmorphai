@@ -58,8 +58,12 @@ export interface LegalDefect {
 }
 
 export interface AuditSummary {
-  defenseViabilityScore: number; // 0 to 100
-  viabilityGrade: 'Strong Dismissal Grounds' | 'Viable Counterclaims' | 'Moderate Defense' | 'Review Needed';
+  defenseViabilityScore: number; // internal 0–100 → mapped to qualitative band in UI
+  viabilityGrade:
+    | 'Strong possible defenses'
+    | 'Viable counterclaims'
+    | 'Moderate defense signals'
+    | 'Needs human review';
   summaryHeadline: string;
   keyFindings: string[];
   actionSteps: {
@@ -76,15 +80,16 @@ export interface DocumentAST {
   title: string;
   documentType: DocumentType;
   jurisdiction: string;
-  /** Full photo of the paper — this is the true 1:1 visual twin (logo, stamp, signature). */
+  /** Optional photo of the paper (OCR assist) — not a 1:1 “visual twin” product claim. */
   originalImageUrl?: string;
   /** Compressed embed used for Word export (set client-side). */
   embedImageUrl?: string;
   embedImageWidth?: number;
   embedImageHeight?: number;
   ocrConfidence?: number;
-  reconstructionMode?: 'visual_twin' | 'sample' | 'ai_ast' | 'text_audit';
-  /** Raw pasted / uploaded text shown beside the living editor */
+  /** How this AST was produced. */
+  reconstructionMode?: 'sample' | 'ai_ast' | 'text_audit';
+  /** Raw pasted / uploaded text shown beside the editor */
   sourceText?: string;
   caption?: CourtCaption;
   metadata: {

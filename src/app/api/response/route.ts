@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generatePleadingWithAI } from '@/lib/gemini';
+import { generatePleadingWithAI } from '@/lib/ai-pipeline';
 import { DocumentAST, CounterPleading } from '@/lib/types';
 import { SAMPLE_CASES } from '@/lib/samples';
 

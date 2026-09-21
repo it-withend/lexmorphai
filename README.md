@@ -10,67 +10,65 @@ LexMorph helps people without a lawyer:
 2. **Hearing Coach** (`/simulator`) — rehearse Housing Court with coaching feedback (not a win prediction)
 3. **Advice Auditor** (`/auditor`) — stress-test ChatGPT-style legal advice (deterministic rules + optional LLM)
 
-> Not legal advice. Educational hackathon prototype. See Limitations on the landing page.
+> Not legal advice. Educational hackathon prototype.
 
-## Privacy
+## Where the code lives (5-minute map)
 
-Demo fixtures stay in the browser. Text/photos you analyze go to the Vercel API; if `GROQ_API_KEY` / `GEMINI_API_KEY` is set on the server, content may be sent to that provider. Redact sensitive numbers when possible.
+| Path | Role |
+|------|------|
+| `src/app/studio` · `auditor` · `simulator` | Product pages |
+| `src/app/api/*` | Thin API routes |
+| `src/lib/legal-rules.ts` · `apply-rules.ts` | Statutory red flags |
+| `src/lib/advice-audit.ts` · `citation-registry.ts` | Auditor safety floor |
+| `src/lib/ai-pipeline.ts` · `groq.ts` | Groq-first LLM (Gemini optional) |
+| `src/lib/samples.ts` | Offline practice fixtures |
+| `docs/ADVICE_AUDITOR_EVAL.md` | Mini-eval table |
+| `docs/DEVPOST_PASTE.md` | Copy-paste Devpost fields |
 
 ## Demo script (3 minutes)
 
 1. Landing → **Open Defense Studio**
-2. Click **NYC Eviction Notice** → review red flags → **Generate Court Answer** → download `.docx`
-3. **Practice this Answer in Hearing Coach** → use a quick answer citing RPAPL § 711
-4. Open **Advice Auditor** → **Run bad-advice demo** → show risk score + safer rewrite
+2. Option A → **NYC eviction example** → review issues → **Generate Court Answer** → `.docx`
+3. **Practice what to say in court** → cite RPAPL § 711
+4. **Advice Auditor** → NYC skip-court demo → risk + safer rewrite
 
 ## Links
+
 - Live: https://lexmorphai.vercel.app
 - Repo: https://github.com/it-withend/lexmorphai
-- P0 smoke notes: `docs/P0_TEST_NOTES.md`
-- Advice Auditor mini-eval: `docs/ADVICE_AUDITOR_EVAL.md` (`npm run eval:auditor`)
-- LexHack submission checklist: `docs/SUBMISSION_CHECKLIST.md`
-- Devpost draft: `DEVPOST.md`
+- Devpost paste pack: `docs/DEVPOST_PASTE.md`
+- Submission checklist: `docs/SUBMISSION_CHECKLIST.md`
+- Auditor eval: `docs/ADVICE_AUDITOR_EVAL.md` (`npm run eval:auditor`)
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env.local
-# optional free keys:
-# GROQ_API_KEY=gsk_...
-# GEMINI_API_KEY=AIza...
+# GROQ_API_KEY=gsk_...   # server only — visitors need no key
 npm run dev
 ```
 
-Keys: visitors do **not** need to paste an API key. The app uses the server `GROQ_API_KEY` on Vercel when configured. (Developers may still set env keys locally.)
-
 ## Limitations
 
-- Curated Studio demos are **offline fixtures** (honest loading copy) — not a live LLM audit of that sample.
-- Defense “viability” is a **qualitative band** from rule hits, not a win probability.
-- Citation checks use a small known-good registry + format heuristics (`verified` / `unknown` / `suspicious`) — **not** primary-law API verification.
-- Advice Auditor safer rewrites may be LLM-generated and are labeled **unverified**.
-- Rate limits + max body length on `/api/analyze` and `/api/audit-advice`; in-memory limits reset per serverless instance.
-- Educational prototype — not a lawyer, not a filing system, not legal advice.
+- Practice demos are offline fixtures (honest UI copy).
+- Defense strength is a qualitative band, not a win %.
+- Citations: known-good list + format heuristics — not live primary-law APIs.
+- Safer rewrites may be AI-generated and are labeled unverified.
+- Educational only — not a lawyer or filing system.
 
 ## Privacy
 
-- Demo fixtures stay in the browser.
-- Pasted/OCR text and Auditor advice are sent to the API; with a provider key they may leave the server to Groq/Gemini.
-- Redact SSNs, account numbers, and full addresses when possible.
-- We do not intentionally persist user documents in a database in this hackathon build.
+Practice examples stay in the browser. Pasted/OCR text and Auditor advice go to our Vercel API; with `GROQ_API_KEY` / `GEMINI_API_KEY` on the server they may be sent to that provider. Own cases can be saved in `localStorage` on that device. Redact SSNs and bank numbers. Visitors do not paste API keys.
 
 ## Tech stack
 
-- Next.js 16 · React 19 · TypeScript · Tailwind CSS 4
-- LLMs: optional Groq / Gemini (demos work with offline rules + samples)
-- Export: `docx`
-- Safety auditor: deterministic danger patterns + LLM enrichment (rules cannot be removed by the model)
+Next.js 16 · React 19 · TypeScript · Tailwind 4 · Groq / Gemini (optional) · `docx` · deterministic Auditor rules
 
 ## AI tools used (build)
 
 Cursor agent + Claude for coding assistance; Groq / Gemini optional at runtime.
 
-## Repo
+## License
 
-https://github.com/it-withend/lexmorphai
+MIT — see `LICENSE`

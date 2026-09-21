@@ -68,12 +68,12 @@ export function enrichAstWithRules(ast: DocumentAST, sourceText?: string): Docum
 
   const viabilityGrade =
     score >= 80
-      ? 'Strong Dismissal Grounds'
+      ? 'Strong possible defenses'
       : score >= 65
-        ? 'Viable Counterclaims'
+        ? 'Viable counterclaims'
         : score >= 50
-          ? 'Moderate Defense'
-          : 'Review Needed';
+          ? 'Moderate defense signals'
+          : 'Needs human review';
 
   const actionSteps =
     ast.audit.actionSteps?.length > 0

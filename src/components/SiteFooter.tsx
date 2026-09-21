@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ExternalLink, Code2, Timer } from 'lucide-react';
+import { ExternalLink, Code2, Timer, Shield } from 'lucide-react';
 
 export default function SiteFooter() {
   return (
@@ -15,8 +15,8 @@ export default function SiteFooter() {
           </p>
           <p className="text-[11px] text-slate-600 flex items-start gap-1.5 leading-relaxed">
             <Timer className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-500" />
-            Judges: Studio → NYC Eviction demo → Generate Answer → .docx → Hearing Coach (RPAPL § 711 /
-            14-day) → Auditor → NYC skip-court pack. Live:{' '}
+            Judges: Studio → NYC practice example → Answer draft → Hearing Coach → Auditor skip-court demo.
+            Live:{' '}
             <a
               href="https://lexmorphai.vercel.app"
               className="text-emerald-400/90 hover:text-emerald-300 underline-offset-2 hover:underline"
@@ -42,13 +42,13 @@ export default function SiteFooter() {
           >
             Defense Studio
           </Link>
-          <button
-            type="button"
-            onClick={() => document.getElementById('open-api-keys')?.click()}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 hover:text-slate-300"
+          <Link
+            href="/auditor"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
           >
-            Settings / API keys
-          </button>
+            <Shield className="w-3.5 h-3.5 text-violet-400" />
+            Advice Auditor
+          </Link>
         </div>
       </div>
     </footer>

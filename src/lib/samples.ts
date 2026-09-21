@@ -147,8 +147,8 @@ export const SAMPLE_CASES: SampleCase[] = [
       ],
       audit: {
         defenseViabilityScore: 82,
-        viabilityGrade: 'Strong Dismissal Grounds',
-        summaryHeadline: 'Notice is Severely Defective Under NY RPAPL § 711 — High Probability of Dismissal',
+        viabilityGrade: 'Strong possible defenses',
+        summaryHeadline: 'Notice looks defective under NY RPAPL § 711 — strong issues to raise (not a win prediction)',
         keyFindings: [
           'Landlord provided only 3 days instead of the mandatory 14-day statutory notice under HSTPA 2019.',
           'Notice includes unlawful $450 in late & administrative fees prohibited under NY RPL § 238-a.',
@@ -329,7 +329,7 @@ export const SAMPLE_CASES: SampleCase[] = [
       ],
       audit: {
         defenseViabilityScore: 78,
-        viabilityGrade: 'Viable Counterclaims',
+        viabilityGrade: 'Viable counterclaims',
         summaryHeadline: 'Lease Contains Multiple Illegal Clauses Under California Civil Code',
         keyFindings: [
           'Security deposit exceeds California AB 12 statutory 1-month cap.',

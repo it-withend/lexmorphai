@@ -5,7 +5,7 @@ import { DocumentAST, CounterPleading } from '@/lib/types';
 export const maxDuration = 60;
 export const runtime = 'nodejs';
 
-// Large visual-twin payloads include the embedded scan image
+/** DOCX export — Answer drafts and editable document copies */
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
@@ -14,14 +14,14 @@ export async function POST(req: NextRequest) {
     const { type, data, filename } = body;
 
     let buffer: Buffer;
-    let defaultName = 'lexmorph_document.docx';
+    let defaultName = 'LexMorph_document.docx';
 
     if (type === 'pleading') {
       buffer = await generatePleadingDocx(data as CounterPleading);
-      defaultName = 'verified_answer_pleading.docx';
+      defaultName = 'LexMorph_Court_Answer.docx';
     } else {
       buffer = await generateDocumentDocx(data as DocumentAST);
-      defaultName = 'reconstructed_legal_document.docx';
+      defaultName = 'LexMorph_document.docx';
     }
 
     const finalFilename = filename || defaultName;

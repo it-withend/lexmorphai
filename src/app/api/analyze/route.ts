@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeLegalDocument, getSampleAst } from '@/lib/gemini';
+import { analyzeLegalDocument, getSampleAst } from '@/lib/ai-pipeline';
 import { SAMPLE_CASES } from '@/lib/samples';
 import {
   clientKeyFromRequest,

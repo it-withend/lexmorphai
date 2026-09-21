@@ -259,7 +259,7 @@ Analyze the document and return ONLY valid JSON:
   "defects": [],
   "audit": {
     "defenseViabilityScore": 40,
-    "viabilityGrade": "Review Needed",
+    "viabilityGrade": "Needs human review",
     "summaryHeadline": "One sentence in English describing what the document appears to be",
     "keyFindings": ["finding in English"],
     "actionSteps": [
