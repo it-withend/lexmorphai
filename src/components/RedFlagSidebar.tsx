@@ -15,7 +15,9 @@ import {
   Printer,
   ListChecks,
   Clock3,
+  Info,
 } from 'lucide-react';
+import { bandDescription, bandLabel, scoreToBand } from '@/lib/viability';
 
 interface RedFlagSidebarProps {
   ast: DocumentAST;
@@ -35,6 +37,7 @@ export default function RedFlagSidebar({
 
   const score = ast.audit.defenseViabilityScore;
   const grade = ast.audit.viabilityGrade;
+  const band = scoreToBand(score);
 
   const handleCopyDefense = (defect: LegalDefect) => {
     const text = `${defect.recommendedDefense}\nStatutory Basis: ${defect.citation}\n${defect.plainEnglishExplanation}`;
@@ -82,33 +85,34 @@ export default function RedFlagSidebar({
       <div className="p-4 rounded-xl bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-800">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Legal Defense Viability
+            Defense strength (educational)
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-            Pro Se Advantage
+            Not a court prediction
           </span>
         </div>
 
-        <div className="flex items-end gap-3 mb-2">
-          <div className="text-4xl font-extrabold text-white tracking-tight font-mono">
-            {score}<span className="text-emerald-400 text-2xl">%</span>
-          </div>
-          <div className="text-xs font-semibold text-emerald-400 pb-1.5 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <div className="mb-2">
+          <div className="text-xl font-extrabold text-white tracking-tight">{bandLabel(band)}</div>
+          <p className="text-xs font-semibold text-emerald-400 mt-1 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
             {grade}
-          </div>
+          </p>
         </div>
 
-        {/* Progress Bar */}
         <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden mb-3">
           <div
             className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
-            style={{ width: `${score}%` }}
-          ></div>
+            style={{
+              width: `${band === 'strong' ? 85 : band === 'moderate' ? 68 : band === 'limited' ? 48 : 28}%`,
+            }}
+          />
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed">
-          {ast.audit.summaryHeadline}
+        <p className="text-xs text-slate-300 leading-relaxed">{ast.audit.summaryHeadline}</p>
+        <p className="text-[10px] text-slate-500 mt-2 leading-relaxed flex items-start gap-1.5">
+          <Info className="w-3 h-3 mt-0.5 shrink-0" />
+          {bandDescription(band)} Automated flags are educational — not legal advice.
         </p>
       </div>
 
@@ -119,7 +123,7 @@ export default function RedFlagSidebar({
           className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center justify-center gap-2 group"
         >
           <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-          <span>Generate Official Court Answer</span>
+          <span>Generate Court Answer</span>
           <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </button>
 
@@ -129,7 +133,7 @@ export default function RedFlagSidebar({
             className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-cyan-300 border border-cyan-500/20 transition-colors flex items-center justify-center gap-2"
           >
             <Scale className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Practice in Court Hearing Simulator</span>
+            <span>Practice this case in Hearing Coach</span>
           </button>
         )}
       </div>
@@ -203,12 +207,17 @@ export default function RedFlagSidebar({
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-white flex items-center gap-1.5">
             <ShieldAlert className="w-4 h-4 text-red-400" />
-            <span>Statutory Red Flags ({ast.defects.length})</span>
+            <span>Issues found ({ast.defects.length})</span>
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">Dismissal Triggers</span>
+          <span className="text-[10px] text-slate-400">Plain English first</span>
         </div>
 
         <div className="space-y-3">
+          {ast.defects.length === 0 && (
+            <p className="text-xs text-slate-500 leading-relaxed">
+              No automatic statutory triggers matched. Try a curated NYC/CA demo, or paste clearer notice text.
+            </p>
+          )}
           {ast.defects.map((defect) => (
             <div
               key={defect.id}
@@ -223,14 +232,14 @@ export default function RedFlagSidebar({
                 </span>
               </div>
 
-              <div className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
-                <span>Citation:</span>
-                <strong className="text-slate-200">{defect.citation}</strong>
-              </div>
-
-              <p className="text-slate-400 text-[11px] line-clamp-3 leading-relaxed">
+              <p className="text-slate-300 text-[11px] leading-relaxed">
                 {defect.plainEnglishExplanation}
               </p>
+
+              <div className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
+                <span>Statute:</span>
+                <strong className="text-slate-300">{defect.citation}</strong>
+              </div>
 
               <div className="flex items-center justify-between pt-1 border-t border-slate-900">
                 <button

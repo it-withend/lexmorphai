@@ -22,7 +22,39 @@ function hasCyrillic(text: string): boolean {
 }
 
 function isUsJurisdiction(jurisdiction: string): boolean {
-  return /new york|california|united states|kings county|los angeles/i.test(jurisdiction || '');
+  return /new york|california|united states|kings county|los angeles|nyc|brooklyn|bronx|queens|manhattan|usa|\bu\.?s\.?\b/i.test(
+    jurisdiction || ''
+  );
+}
+
+/** Infer NY/CA/US from document text when the LLM omits or invents jurisdiction. */
+export function inferJurisdictionFromText(text: string, fallback = ''): string {
+  const t = text.toLowerCase();
+  if (/new york|nyc|kings county|brooklyn|bronx|queens|manhattan|rpapl|rpl §\s*235|housing court/i.test(t)) {
+    return 'New York';
+  }
+  if (/california|los angeles|san francisco|civil code §\s*1950|ab\s*12/i.test(t)) {
+    return 'California';
+  }
+  if (/united states|u\.s\.a|federal|fdcpa|15 u\.s\.c/i.test(t)) {
+    return 'United States';
+  }
+  if (isUsJurisdiction(fallback)) return fallback;
+  // US-looking housing/lease triggers without explicit place → default NY for LexHack demos
+  if (
+    /eviction|rent demand|notice to quit|landlord|tenant|lease|as is|3[\s-]?day|14[\s-]?day|nonpayment|habitability/i.test(
+      t
+    )
+  ) {
+    return 'New York';
+  }
+  return fallback || 'Unknown';
+}
+
+function shouldApplyUsRules(jurisdiction: string, rawText?: string): boolean {
+  if (isUsJurisdiction(jurisdiction)) return true;
+  if (!rawText) return false;
+  return isUsJurisdiction(inferJurisdictionFromText(rawText, jurisdiction));
 }
 
 /** Drop invented US court captions / translations when OCR says otherwise. */
@@ -48,15 +80,25 @@ function sanitizeAst(ast: DocumentAST, rawText?: string, imageUrl?: string): Doc
     next = { ...next, caption: undefined };
   }
 
-  if (!isUsJurisdiction(next.jurisdiction)) {
+  const inferred = inferJurisdictionFromText(
+    `${rawText || ''}\n${corpus}\n${next.jurisdiction || ''}`,
+    next.jurisdiction
+  );
+  if (!isUsJurisdiction(next.jurisdiction) && isUsJurisdiction(inferred)) {
+    next = { ...next, jurisdiction: inferred };
+  }
+
+  if (!shouldApplyUsRules(next.jurisdiction, rawText)) {
     // Never apply US-only defect inventions outside US docs
     next = {
       ...next,
       defects: next.defects.filter((d) => !/RPAPL|RPL §|Civil Code § 1950|FDCPA|15 U\.S\.C/i.test(d.citation)),
     };
+    return next;
   }
 
-  return isUsJurisdiction(next.jurisdiction) ? enrichAstWithRules(next, rawText) : next;
+  // Always merge deterministic statutory rules for US/NY/CA (do not rely on LLM defects alone)
+  return enrichAstWithRules(next, rawText || corpus);
 }
 
 export type AnalysisSource =
@@ -286,7 +328,7 @@ export async function generatePleadingWithAI(
 }
 
 export async function simulateHearingTurn(
-  history: Array<{ speaker: string; text: string }>,
+  history: Array<{ speaker: string; text: string }> | undefined,
   userResponse: string,
   caseContext: string,
   apiKey?: string,
@@ -301,7 +343,8 @@ export async function simulateHearingTurn(
 } | null> {
   const geminiKey = getServerGeminiKey(apiKey);
   const groqKey = getServerGroqKey(groqApiKey);
-  const prompt = buildSimulationPrompt(history, userResponse, caseContext);
+  const safeHistory = Array.isArray(history) ? history : [];
+  const prompt = buildSimulationPrompt(safeHistory, userResponse, caseContext);
 
   // Groq first (user's primary free key on Vercel)
   if (groqKey) {
@@ -388,15 +431,24 @@ function buildSimulationPrompt(
   userResponse: string,
   caseContext: string
 ): string {
-  return `You are a real NYC Housing Court Judge. The user is a pro se tenant in a nonpayment eviction hearing.
-Case: ${caseContext}
+  const safeHistory = Array.isArray(history) ? history : [];
+  return `You are a Housing Court coach helping a pro se tenant rehearse. Educational only — not legal advice.
+
+CASE + GROUND TRUTH:
+${caseContext}
 
 Conversation so far:
-${history.map((h) => `${h.speaker.toUpperCase()}: ${h.text}`).join('\n')}
+${safeHistory.map((h) => `${h.speaker.toUpperCase()}: ${h.text}`).join('\n') || '(start of hearing)'}
 
 Tenant's response: "${userResponse}"
 
-Return JSON:
+RULES:
+- Never affirm that a 3-day NY rent demand is valid for nonpayment; RPAPL § 711(2) requires ≥14 days.
+- Prefer specific statute citations from the case context.
+- If the tenant is wrong on the notice period, score ≤40 and correct them.
+- Never guarantee win/dismissal percentages.
+
+Return JSON only:
 {
   "score": <1-100>,
   "praise": "What they did right",

@@ -146,7 +146,7 @@ export const SAMPLE_CASES: SampleCase[] = [
         },
       ],
       audit: {
-        defenseViabilityScore: 96,
+        defenseViabilityScore: 82,
         viabilityGrade: 'Strong Dismissal Grounds',
         summaryHeadline: 'Notice is Severely Defective Under NY RPAPL § 711 — High Probability of Dismissal',
         keyFindings: [
@@ -157,7 +157,7 @@ export const SAMPLE_CASES: SampleCase[] = [
         actionSteps: [
           {
             stepNumber: 1,
-            title: 'File Verified Answer with Defenses',
+            title: 'Draft a written Answer with defenses',
             deadline: 'Within 14 days of court summons service',
             description: 'Submit your Answer asserting jurisdictional defect and habitability counterclaims.',
             urgent: true,
@@ -328,7 +328,7 @@ export const SAMPLE_CASES: SampleCase[] = [
         },
       ],
       audit: {
-        defenseViabilityScore: 91,
+        defenseViabilityScore: 78,
         viabilityGrade: 'Viable Counterclaims',
         summaryHeadline: 'Lease Contains Multiple Illegal Clauses Under California Civil Code',
         keyFindings: [

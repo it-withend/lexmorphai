@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Navbar from '@/components/Navbar';
+import SiteFooter from '@/components/SiteFooter';
+import TrustStrip from '@/components/TrustStrip';
 import HearingSimulator from '@/components/HearingSimulator';
 import Link from 'next/link';
 import { ArrowLeft, Landmark } from 'lucide-react';
@@ -23,12 +25,14 @@ export default function SimulatorPage() {
 
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Landmark className="w-3.5 h-3.5 text-cyan-400" />
-            Pick a scenario · rehearse · get scored coaching
+            Practice scenarios · coach feedback (not a real judge)
           </div>
         </div>
 
+        <TrustStrip compact />
         <HearingSimulator />
       </main>
+      <SiteFooter />
     </div>
   );
 }

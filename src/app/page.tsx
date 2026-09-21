@@ -3,6 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import TrustStrip from '@/components/TrustStrip';
+import SiteFooter from '@/components/SiteFooter';
 import {
   Scale,
   Sparkles,
@@ -17,6 +19,8 @@ import {
   Mic2,
   BadgeCheck,
   Download,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 
 const HERO_STATS = [
@@ -55,34 +59,70 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Audit a notice or lease, draft a court-ready Answer, rehearse Housing Court — and stress-test
-              dangerous ChatGPT “legal advice” before anyone acts on it.
+              Spot problems in a housing notice, practice what to say in court, and catch dangerous ChatGPT
+              “legal advice” before anyone acts on it. Educational — not a lawyer.
             </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            <TrustStrip compact />
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
             <Link
+              href="/auditor"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-xl shadow-violet-500/20 flex items-center justify-center gap-2 group"
+            >
+              <ShieldAlert className="w-4 h-4" />
+              Audit ChatGPT advice
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link
               href="/studio"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 group"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
               Open Defense Studio
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               href="/simulator"
               className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-semibold text-sm bg-slate-900 border border-slate-700 text-slate-200 flex items-center justify-center gap-2"
             >
               <Gavel className="w-4 h-4 text-cyan-400" />
-              Hearing Coach
+              Hearing practice
             </Link>
-            <Link
-              href="/auditor"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-semibold text-sm bg-slate-900 border border-violet-500/30 text-violet-200 flex items-center justify-center gap-2"
-            >
-              <Shield className="w-4 h-4 text-violet-400" />
-              Advice Auditor
-            </Link>
+          </div>
+
+          <div className="max-w-3xl mx-auto pt-2">
+            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-left space-y-3">
+              <p className="text-xs font-semibold text-amber-200 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Got a notice? Three one-click starts
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <Link
+                  href="/studio"
+                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-amber-500/40"
+                >
+                  <span className="font-semibold text-white block">NYC demo</span>
+                  Open Studio → Eviction Notice
+                </Link>
+                <Link
+                  href="/studio"
+                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-emerald-500/40"
+                >
+                  <span className="font-semibold text-white block">Paste text</span>
+                  Analyze your notice in Studio
+                </Link>
+                <Link
+                  href="/auditor"
+                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-violet-500/40"
+                >
+                  <span className="font-semibold text-white block">Audit ChatGPT</span>
+                  Catch unsafe “skip court” advice
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-800/80 text-left">
@@ -109,26 +149,51 @@ export default function LandingPage() {
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Three tools. One defense loop.</h2>
             <p className="text-sm text-slate-400">
-              Built for tenants and pro se litigants who face landlords and chatbots alone.
+              Built for tenants who face landlords — and chatbots — without a lawyer.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-3xl bg-slate-950 border border-violet-500/30 space-y-4 md:order-first">
+              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">Advice Auditor · AI Safety</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Chatbots tell people to skip court or invent statutes. We stress-test that advice with
+                deterministic danger rules (works offline) plus optional LLM enrichment — then a safer rewrite.
+              </p>
+              <div className="text-[11px] text-violet-300/90 space-y-1">
+                <p className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Catches “skip court” / suspicious-format cites
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Honest about pattern limits
+                </p>
+              </div>
+              <Link
+                href="/auditor"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+              >
+                <Shield className="w-3.5 h-3.5" /> Open Auditor <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
             <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
               <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                 <FileCheck className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-white">Defense Studio</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Paste a notice/lease or open a curated NY/CA case. Flag illegal clauses in plain English, edit the
-                living document, generate a court-ready Answer, export Word.
+                Practice cases or your own notice (paste / photo / Word). Flag common problems in plain English,
+                draft an Answer template, export Word. Not a guarantee the court will accept it.
               </p>
               <div className="text-[11px] text-emerald-300/90 space-y-1">
                 <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Statutory red-flag audit
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Plain-English issue flags
                 </p>
                 <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Counter-pleading generator
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Answer draft (.docx)
                 </p>
               </div>
               <Link
@@ -163,32 +228,34 @@ export default function LandingPage() {
                 <Mic2 className="w-3.5 h-3.5" /> Open Coach <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-
-            <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
-              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-white">Advice Auditor</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Chatbots tell people to skip court or invent statutes. Audit that advice for dangerous actions,
-                overconfidence, and fake citations — then get a safer rewrite.
-              </p>
-              <div className="text-[11px] text-violet-300/90 space-y-1">
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Deterministic safety rules
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> AI Safety track fit
-                </p>
-              </div>
-              <Link
-                href="/auditor"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
-              >
-                <Shield className="w-3.5 h-3.5" /> Open Auditor <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
           </div>
+        </div>
+      </section>
+
+      <section className="py-12 border-t border-slate-800/60">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-3">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Info className="w-4 h-4 text-slate-400" />
+            Limitations (honest)
+          </h2>
+          <ul className="text-xs text-slate-400 space-y-2 leading-relaxed list-disc pl-5">
+            <li>
+              <strong className="text-slate-300">PDF upload</strong> is not supported yet — use paste, a photo of
+              the page (on-device OCR), or Word (.docx).
+            </li>
+            <li>
+              <strong className="text-slate-300">Practice demos</strong> are curated fixtures so judging works
+              offline. Your own paste/photo uses statutory rules + optional server Groq when configured.
+            </li>
+            <li>
+              <strong className="text-slate-300">Answer drafts</strong> are educational templates — not guaranteed
+              “court-ready” filings. Formats differ by court; get help from Legal Aid / LawHelp when you can.
+            </li>
+            <li>
+              <strong className="text-slate-300">Defense bands</strong> are qualitative teaching signals — not win
+              probabilities.
+            </li>
+          </ul>
         </div>
       </section>
 
@@ -221,6 +288,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <SiteFooter />
     </div>
   );
 }

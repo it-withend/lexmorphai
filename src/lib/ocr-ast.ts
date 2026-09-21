@@ -70,7 +70,7 @@ function guessTitle(type: DocumentType, lines: string[]): string {
     case 'debt_demand':
       return 'Debt Collection Demand';
     default:
-      return header || 'Visual Twin Document';
+      return header || 'Reconstructed Document';
   }
 }
 
@@ -159,10 +159,9 @@ export function buildAstFromOcrText(rawText: string, options: BuildAstOptions = 
       viabilityGrade: defects.length ? 'Moderate Defense' : 'Review Needed',
       summaryHeadline: isUsJurisdiction(jurisdiction)
         ? ''
-        : `Visual twin ready: original photo preserved (logo, stamp, signature). OCR transcript confidence ~${conf}%. Edit any misread lines below.`,
+        : `Document text reconstructed for editing. Review carefully — free OCR can misread seals and handwriting.`,
       keyFindings: [
-        '1:1 visual fidelity comes from the original photo embedded in the living document and Word export.',
-        'OCR text is an editable layer — fix mistakes by clicking lines. Free OCR is imperfect on seals and handwriting.',
+        'Editable text layer may contain OCR mistakes — fix lines that do not match the original paper.',
         ...(isUsJurisdiction(jurisdiction)
           ? []
           : ['Non-US document: no US statutory rules were auto-applied.']),
@@ -170,23 +169,23 @@ export function buildAstFromOcrText(rawText: string, options: BuildAstOptions = 
       actionSteps: [
         {
           stepNumber: 1,
-          title: 'Review the photo twin',
+          title: 'Review the living document',
           deadline: 'Now',
-          description: 'The top image is your exact document — stamp, logo, and signature stay as photographed.',
+          description: 'Confirm parties, deadlines, and key clauses match the original notice.',
           urgent: true,
         },
         {
           stepNumber: 2,
-          title: 'Fix OCR transcript lines',
+          title: 'Fix any misread lines',
           deadline: 'Now',
-          description: 'Click any line under the photo and correct text that does not match the scan.',
+          description: 'Click text in the editor and correct anything that does not match the paper.',
           urgent: true,
         },
         {
           stepNumber: 3,
-          title: 'Download Word Visual Twin',
+          title: 'Download Word (.docx)',
           deadline: 'Today',
-          description: 'Export .docx — page 1 is the original scan; following pages are editable text.',
+          description: 'Export an editable draft for your records (educational — not a court filing guarantee).',
           urgent: false,
         },
       ],

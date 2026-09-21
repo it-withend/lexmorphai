@@ -3,6 +3,7 @@
 import React from 'react';
 import { SAMPLE_CASES, SampleCase } from '@/lib/samples';
 import { AlertCircle, FileText, CheckCircle2, ArrowRight, MapPin, Shield } from 'lucide-react';
+import { bandLabel, scoreToBand } from '@/lib/viability';
 
 interface SamplePickerProps {
   selectedSampleId: string;
@@ -81,7 +82,7 @@ export default function SamplePicker({ selectedSampleId, onSelectSample }: Sampl
                   <span className="text-slate-500">•</span>
                   <span className="text-emerald-400 font-medium text-[11px] flex items-center gap-1">
                     <Shield className="w-3 h-3" />
-                    {score}% Defense Viability
+                    {bandLabel(scoreToBand(score))}
                   </span>
                 </div>
 

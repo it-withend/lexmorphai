@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auditLegalAdvice } from '@/lib/advice-auditor-llm';
 import { SAMPLE_BAD_ADVICE_PACKS } from '@/lib/advice-audit';
+import {
+  clientKeyFromRequest,
+  MAX_ADVICE_CHARS,
+  rateLimit,
+} from '@/lib/rate-limit';
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = rateLimit(`audit:${clientKeyFromRequest(req)}`, 20, 60_000);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { success: false, error: `Rate limit exceeded. Retry in ~${rl.retryAfterSec}s.` },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const {
       adviceText,
@@ -34,6 +47,12 @@ export async function POST(req: NextRequest) {
     if (!text || text.trim().length < 20) {
       return NextResponse.json(
         { success: false, error: 'Paste the AI advice text to audit (at least a short paragraph).' },
+        { status: 400 }
+      );
+    }
+    if (text.length > MAX_ADVICE_CHARS) {
+      return NextResponse.json(
+        { success: false, error: `Advice text too long (max ${MAX_ADVICE_CHARS} characters).` },
         { status: 400 }
       );
     }

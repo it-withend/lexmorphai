@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
+import TrustStrip from '@/components/TrustStrip';
+import SiteFooter from '@/components/SiteFooter';
 import { AdviceAuditResult } from '@/lib/types';
 import { SAMPLE_BAD_ADVICE_PACKS } from '@/lib/advice-audit';
 import Link from 'next/link';
@@ -32,6 +34,7 @@ const RISK_STYLES: Record<string, string> = {
   high: 'text-orange-300 bg-orange-500/10 border-orange-500/30',
   moderate: 'text-amber-300 bg-amber-500/10 border-amber-500/30',
   low: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30',
+  unknown: 'text-slate-300 bg-slate-500/10 border-slate-500/30',
 };
 
 export default function AdviceAuditorPage() {
@@ -101,8 +104,22 @@ export default function AdviceAuditorPage() {
           </h1>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
             Paste advice from ChatGPT / Gemini / Copilot about eviction, debt, or court. LexMorph
-            stress-tests it for dangerous actions, fake citations, overconfidence, and missing
+            stress-tests it for dangerous actions, suspicious-looking citations, overconfidence, and missing
             disclaimers — then offers a safer educational rewrite.
+          </p>
+        </div>
+
+        <TrustStrip />
+
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 leading-relaxed flex gap-2">
+          <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+          <p>
+            <strong className="text-slate-300">How citation checks work:</strong> a small known-good registry
+            labels cites as <em>verified</em> / <em>unknown</em> / <em>suspicious format</em> — we never
+            auto-call something “fake.” Danger phrases (e.g. “skip the hearing”) are separate deterministic
+            rules. Empty matches → risk level <code className="text-slate-300">unknown</code>, not “low.”
+            Safer rewrites may be AI-generated and are always unverified. Always check LawHelp / legislature
+            / LII.
           </p>
         </div>
 
@@ -227,7 +244,10 @@ export default function AdviceAuditorPage() {
                     Safety flags ({result.flags.length})
                   </h2>
                   {result.flags.length === 0 ? (
-                    <p className="text-xs text-slate-400">No automatic flags — still verify citations.</p>
+                    <p className="text-xs text-slate-400">
+                      No known patterns matched — that does <strong className="text-slate-300">not</strong>{' '}
+                      mean the advice is safe. Verify every citation and next step yourself.
+                    </p>
                   ) : (
                     result.flags.map((f) => (
                       <div key={f.id} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
@@ -256,8 +276,12 @@ export default function AdviceAuditorPage() {
                       {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
+                  <p className="text-[10px] uppercase tracking-wide text-amber-300/90 font-mono">
+                    AI-generated · unverified · not legal advice
+                  </p>
                   <pre className="whitespace-pre-wrap text-xs text-slate-300 leading-relaxed font-sans">
-                    {result.saferRewrite}
+                    {result.saferRewrite ||
+                      'No rewrite returned — still treat chatbot advice as unverified. Prefer legal-aid / court self-help materials for your jurisdiction.'}
                   </pre>
                 </div>
 
@@ -267,7 +291,14 @@ export default function AdviceAuditorPage() {
                     Verification checklist
                   </h2>
                   <ul className="space-y-1.5 text-xs text-slate-400">
-                    {result.checklist.map((c) => (
+                    {(result.checklist?.length
+                      ? result.checklist
+                      : [
+                          'Verify every statute citation on a primary source before repeating it.',
+                          'Do not skip a hearing date based on chatbot advice.',
+                          'Contact a legal aid clinic if you have a court date.',
+                        ]
+                    ).map((c) => (
                       <li key={c} className="flex gap-2">
                         <span className="text-emerald-500">•</span>
                         {c}
@@ -301,6 +332,7 @@ export default function AdviceAuditorPage() {
           </div>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
