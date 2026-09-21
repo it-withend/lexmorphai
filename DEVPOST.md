@@ -53,9 +53,9 @@ LexMorph ships three connected tools:
 - **AI code tools:** Cursor / Copilot-style assistants may have been used during development; core product logic (rules KB, Studio/Hearing/Auditor flows) is team-owned and explainable.
 
 ## APIs / keys
-- Judging works **without** paid Google billing (samples + rules).  
-- Optional `GROQ_API_KEY` / `GEMINI_API_KEY` deepen AI turns.  
-- Prefer Production+Preview env + redeploy. Health: `/api/ai-status`.
+- Visitors need **no** API key — server `GROQ_API_KEY` on Vercel powers live AI when configured.  
+- Judging still works in **Basic mode** (samples + deterministic rules).  
+- Health: `/api/ai-status`.
 
 ## What’s original
 - End-to-end **defense loop** (audit → pleading → oral prep) instead of a generic chatbot.  
@@ -96,13 +96,14 @@ LexMorph ships three connected tools:
 - Deterministic Auditor mini-eval: **25/25** labeled cases, 100% mustHit recall, 0 mustNotHit FPs (`npm run eval:auditor`, `docs/ADVICE_AUDITOR_EVAL.md`).
 
 ## Privacy
-API routes may forward user text (and optional client-supplied keys) to LLM providers. Keys in the navbar live in `localStorage` but still transit the server. Prefer server env keys for demos.
+Visitors do **not** paste API keys. The app uses the server `GROQ_API_KEY` on Vercel when configured. Pasted notices / advice may be sent to the LLM provider for enrichment. Practice examples stay in the browser; your own cases can be saved in `localStorage` on that device.
 
 ## Links
 - **Live app:** https://lexmorphai.vercel.app  
 - **Repo:** https://github.com/it-withend/lexmorphai  
 - **P0 smoke notes:** `docs/P0_TEST_NOTES.md`  
-- **Auditor mini-eval:** `docs/ADVICE_AUDITOR_EVAL.md`
+- **Auditor mini-eval:** `docs/ADVICE_AUDITOR_EVAL.md`  
+- **Submission checklist:** `docs/SUBMISSION_CHECKLIST.md`
 
 ---
 

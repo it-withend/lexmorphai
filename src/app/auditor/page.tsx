@@ -19,6 +19,7 @@ import {
   Scale,
   FileText,
   Info,
+  BadgeCheck,
 } from 'lucide-react';
 
 const RISK_STYLES: Record<string, string> = {
@@ -98,6 +99,23 @@ export default function AdviceAuditorPage() {
         </div>
 
         <TrustStrip />
+
+        <div className="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/25 text-xs text-violet-100/90 leading-relaxed flex gap-3">
+          <BadgeCheck className="w-5 h-5 text-violet-300 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-white">Built-in safety tests (for judges &amp; builders)</p>
+            <p className="mt-1 text-violet-100/80">
+              Deterministic mini-eval: <strong className="text-white">25/25</strong> labeled chatbot-style
+              cases · 100% must-hit recall · 0 false positives on the watch list ·{' '}
+              <strong className="text-white">47</strong> known-good citations. Rules cannot be removed by the
+              LLM (safety floor).
+            </p>
+            <p className="mt-1 text-[11px] text-violet-200/70">
+              Details: repo file <code className="text-violet-100">docs/ADVICE_AUDITOR_EVAL.md</code> · run{' '}
+              <code className="text-violet-100">npm run eval:auditor</code>
+            </p>
+          </div>
+        </div>
 
         <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 leading-relaxed flex gap-2">
           <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />

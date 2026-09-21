@@ -24,10 +24,10 @@ import {
 } from 'lucide-react';
 
 const HERO_STATS = [
-  { icon: FileCheck, label: '1-Click', detail: 'Court Answer' },
-  { icon: Mic2, label: 'Live', detail: 'Hearing coach' },
-  { icon: ShieldAlert, label: 'Safety', detail: 'AI advice audit' },
-  { icon: Download, label: '.docx', detail: 'Court export' },
+  { icon: FileCheck, label: 'Notice check', detail: 'Plain English' },
+  { icon: Mic2, label: 'Court practice', detail: 'Hearing coach' },
+  { icon: ShieldAlert, label: 'Chatbot audit', detail: 'Catch bad advice' },
+  { icon: Download, label: 'Answer draft', detail: 'Word (.docx)' },
 ] as const;
 
 export default function LandingPage() {
