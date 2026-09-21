@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { persistStudioCase } from '@/lib/case-context';
+import { printCourtAnswer } from '@/lib/print-document';
 
 interface CounterActionModalProps {
   isOpen: boolean;
@@ -31,10 +32,13 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
   const [isSigned, setIsSigned] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exported, setExported] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     setExported(false);
+    setLoadError(null);
+    setIsSigned(false);
     persistStudioCase(ast);
 
     const fetchPleading = async () => {
@@ -46,12 +50,15 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
           body: JSON.stringify({ ast, tenantName }),
         });
         const data = await res.json();
-        if (data.success) {
-          setPleading(data.pleading);
-          persistStudioCase(ast, data.pleading);
+        if (!res.ok || !data.success || !data.pleading) {
+          throw new Error(data.error || 'Could not build Answer draft');
         }
+        setPleading(data.pleading);
+        persistStudioCase(ast, data.pleading);
       } catch (err) {
         console.error('Failed to fetch pleading:', err);
+        setPleading(null);
+        setLoadError(err instanceof Error ? err.message : 'Could not build Answer draft');
       } finally {
         setIsLoading(false);
       }
@@ -294,8 +301,13 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                 </div>
               </div>
             </div>
+          ) : loadError ? (
+            <div className="text-center text-red-300 text-sm space-y-2 p-8">
+              <p>{loadError}</p>
+              <p className="text-xs text-slate-500">Close and try Generate Court Answer again.</p>
+            </div>
           ) : (
-            <div className="text-center text-slate-400 text-sm">Failed to load pleading.</div>
+            <div className="text-center text-slate-400 text-sm p-8">Failed to load Answer draft.</div>
           )}
         </div>
 
@@ -321,11 +333,15 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
             )}
 
             <button
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+              onClick={() => {
+                if (!pleading) return;
+                printCourtAnswer(pleading);
+              }}
+              disabled={!pleading}
+              className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 disabled:opacity-40"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print draft</span>
+              <span>Print / PDF draft</span>
             </button>
 
             <button

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { simulateHearingTurn } from '@/lib/ai-pipeline';
+import { clientKeyFromRequest, rateLimit } from '@/lib/rate-limit';
 
 interface SimulationRequest {
   history?: Array<{ speaker: 'judge' | 'user'; text: string }>;
   userResponse?: string;
   caseContext?: string;
   scenarioId?: string;
-  apiKey?: string;
-  groqApiKey?: string;
 }
 
 const DEFAULT_CASE_CONTEXT =
@@ -69,6 +68,14 @@ function applyNoticeGuardrails(
 
 export async function POST(req: NextRequest) {
   try {
+    const rl = rateLimit(`simulate:${clientKeyFromRequest(req)}`, 30, 60_000);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { success: false, error: `Too many requests. Try again in ${rl.retryAfterSec}s.` },
+        { status: 429 }
+      );
+    }
+
     let body: SimulationRequest;
     try {
       body = (await req.json()) as SimulationRequest;
@@ -84,16 +91,19 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    if (userResponse.length > 4000) {
+      return NextResponse.json(
+        { success: false, error: 'Answer is too long (max 4000 characters).' },
+        { status: 400 }
+      );
+    }
 
-    const caseContext = body.caseContext || DEFAULT_CASE_CONTEXT;
-    const { apiKey, groqApiKey } = body;
+    const caseContext = (body.caseContext || DEFAULT_CASE_CONTEXT).slice(0, 8000);
 
     const aiResult = await simulateHearingTurn(
       history,
       userResponse,
-      `${caseContext}\n\n${NOTICE_GUARDRAILS}`,
-      apiKey,
-      groqApiKey
+      `${caseContext}\n\n${NOTICE_GUARDRAILS}`
     );
 
     if (aiResult) {

@@ -144,6 +144,15 @@ Submission checklist: https://github.com/it-withend/lexmorphai/blob/main/docs/SU
 
 ---
 
-## Video (required — you still must record ≤3:00)
+## Peer submissions note (LexHack 2026)
 
-Script: see end of `DEVPOST.md`. Host on YouTube/Loom/Vimeo and paste URL in Devpost.
+As of mid-hackathon the **official project gallery is not public yet** (“hang tight”). When it opens, strong Devpost entries usually share:
+
+1. **Clear tagline** (who + problem in one line)  
+2. **3–6 screenshots** of the working product (not just logos)  
+3. **≤3 min demo video** with captions  
+4. **Live URL + GitHub** above the fold  
+5. Honest **limitations** + tech stack / AI disclosure  
+
+LexMorph already has paste-ready text in this file + thumbnail in `public/devpost-thumbnail.png`.
+

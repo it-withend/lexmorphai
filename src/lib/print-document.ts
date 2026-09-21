@@ -1,4 +1,4 @@
-import { DocumentAST } from './types';
+import type { CounterPleading, DocumentAST } from './types';
 
 function esc(s: string): string {
   return s
@@ -9,7 +9,7 @@ function esc(s: string): string {
 }
 
 /**
- * Clean print window: exact photo twin first, then transcript — no site chrome.
+ * Clean print window for the document editor — text (and optional photo) only, no site chrome.
  */
 export function printLivingDocument(ast: DocumentAST): void {
   const showCaption =
@@ -130,3 +130,161 @@ export function printLivingDocument(ast: DocumentAST): void {
   win.document.write(html);
   win.document.close();
 }
+
+/**
+ * Clean Court Answer print — court-style text only (no modal chrome / buttons / scrollbars).
+ */
+export function printCourtAnswer(pleading: CounterPleading): void {
+  const selected = pleading.affirmativeDefenses.filter((d) => d.selected);
+  const defensesHtml = selected
+    .map(
+      (d, i) => `
+    <section class="defense">
+      <h3>${i + 1}. ${esc(d.defenseName)}</h3>
+      <p class="cite"><em>Statutory basis:</em> ${esc(d.statutoryBasis)}</p>
+      <p>${esc(d.statement)}</p>
+    </section>`
+    )
+    .join('\n');
+
+  const counterHtml =
+    pleading.counterclaims?.length > 0
+      ? `<h2>COUNTERCLAIMS</h2>
+    ${pleading.counterclaims
+      .map(
+        (c) => `
+    <section>
+      <h3>${esc(c.title)}</h3>
+      <p><em>Damages claimed:</em> ${esc(c.damagesClaimed)}</p>
+      <p>${esc(c.factualBasis)}</p>
+    </section>`
+      )
+      .join('\n')}`
+      : '';
+
+  const reliefHtml = (pleading.demandForRelief || [])
+    .map((r, i) => `<li>${esc(r)}</li>`)
+    .join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>${esc(pleading.title || 'Court Answer draft')}</title>
+  <style>
+    @page { margin: 18mm 16mm; size: letter; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      line-height: 1.35;
+      color: #111;
+      background: #fff;
+    }
+    .sheet { max-width: 7.5in; margin: 0 auto; }
+    .banner {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8pt;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      padding: 6px 8px;
+      margin-bottom: 14px;
+    }
+    h1 { text-align: center; font-size: 12pt; margin: 0 0 4px; text-transform: uppercase; }
+    h2 { font-size: 11pt; margin: 16px 0 8px; text-transform: uppercase; border-bottom: 1px solid #111; padding-bottom: 2px; }
+    h3 { font-size: 11pt; margin: 10px 0 4px; }
+    .parties {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 12px;
+      border-top: 1.5px solid #111;
+      border-bottom: 1.5px solid #111;
+      padding: 10px 0;
+      margin: 12px 0 16px;
+    }
+    .index { text-align: right; }
+    p { margin: 0 0 8px; }
+    .cite { font-size: 10pt; color: #333; margin-bottom: 4px; }
+    .defense { margin-bottom: 10px; page-break-inside: avoid; }
+    ol, ul { margin: 0 0 12px; padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    .verify {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #111;
+      page-break-inside: avoid;
+    }
+    .meta {
+      margin-top: 18px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8pt;
+      color: #555;
+    }
+    @media print {
+      .banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="banner">
+      DRAFT — EDUCATIONAL ONLY — NOT LEGAL ADVICE. Check every fact before signing or filing anything.
+    </div>
+    <h1>${esc(pleading.caption.courtName || '')}</h1>
+    <p style="text-align:center;margin:0 0 8px">${esc(pleading.caption.countyOrDistrict || '')}</p>
+    <div class="parties">
+      <div>
+        <strong>${esc(pleading.caption.plaintiff || '')}</strong><br/>
+        <em>-against-</em><br/>
+        <strong>${esc(pleading.caption.defendant || '')}</strong>
+      </div>
+      <div class="index">
+        <strong>Index No. ${esc(pleading.caption.indexNumber || '')}</strong><br/>
+        ${esc(pleading.caption.documentTitle || pleading.title || 'VERIFIED ANSWER')}
+      </div>
+    </div>
+
+    <h2>General Denial</h2>
+    <p>${esc(pleading.generalDenial)}</p>
+
+    <h2>Affirmative Defenses (${selected.length})</h2>
+    ${defensesHtml || '<p><em>No defenses selected.</em></p>'}
+
+    ${counterHtml}
+
+    <h2>Demand for Relief / Prayer</h2>
+    <ol>
+      ${reliefHtml}
+    </ol>
+
+    <div class="verify">
+      <h2>Verification (draft)</h2>
+      <p>${esc(pleading.verificationBlock.penaltyOfPerjuryClause)}</p>
+      <p>
+        Declarant: <strong>${esc(pleading.verificationBlock.declarantName)}</strong><br/>
+        ${esc(pleading.verificationBlock.date)}, ${esc(pleading.verificationBlock.county)}
+      </p>
+    </div>
+
+    <div class="meta">LexMorph Defense Studio · Court Answer draft · Not a filed pleading</div>
+  </div>
+  <script>
+    window.onload = function () {
+      setTimeout(function () { window.print(); }, 250);
+    };
+  </script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1100');
+  if (!win) {
+    alert('Please allow pop-ups to print / save PDF.');
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+

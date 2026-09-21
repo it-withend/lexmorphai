@@ -26,3 +26,4 @@ export function clientKeyFromRequest(req: Request): string {
 
 export const MAX_ADVICE_CHARS = 12_000;
 export const MAX_ANALYZE_CHARS = 20_000;
+export const MAX_SIMULATE_CHARS = 4_000;

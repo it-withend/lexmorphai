@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Scale,
   Send,
@@ -10,6 +10,7 @@ import {
   User,
   Landmark,
   Gavel,
+  AlertTriangle,
 } from 'lucide-react';
 import { HEARING_SCENARIOS, getScenario, HearingScenario } from '@/lib/hearing-scenarios';
 import { getActiveCaseContext, getStudioCaseTitle } from '@/lib/case-context';
@@ -43,10 +44,13 @@ export default function HearingSimulator() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [overallScore, setOverallScore] = useState(70);
+  const [overallScore, setOverallScore] = useState<number | null>(null);
   const [aiEngine, setAiEngine] = useState<'unknown' | 'ai' | 'heuristic'>('unknown');
   const [aiModel, setAiModel] = useState<string>('');
   const [studioTitle, setStudioTitle] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const transcriptRef = useRef<HTMLDivElement>(null);
+  const requestGen = useRef(0);
 
   useEffect(() => {
     const id = pickInitialScenarioId();
@@ -59,7 +63,14 @@ export default function HearingSimulator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenarioId]);
 
+  useEffect(() => {
+    const el = transcriptRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [turns, isSubmitting]);
+
   const startScenario = (s: HearingScenario) => {
+    requestGen.current += 1; // invalidate in-flight answers
     setTurns([
       {
         id: 'turn-1',
@@ -67,10 +78,13 @@ export default function HearingSimulator() {
         text: s.judgeOpening,
       },
     ]);
-    setOverallScore(70);
+    setOverallScore(null);
     setUserInput('');
+    setError(null);
+    setAiEngine('unknown');
+    setAiModel('');
+    setIsSubmitting(false);
     setStudioTitle(getStudioCaseTitle());
-    // Do NOT overwrite studio-carried context — only refresh active merge
     try {
       const merged = getActiveCaseContext(s.caseContext);
       sessionStorage.setItem('lexmorph_case_context', merged);
@@ -83,12 +97,14 @@ export default function HearingSimulator() {
     const text = textToSend || userInput;
     if (!text.trim() || isSubmitting) return;
 
+    const gen = requestGen.current;
     const userTurnId = `turn-${Date.now()}`;
     const newTurn: Turn = { id: userTurnId, speaker: 'user', text };
     const updatedHistory = [...turns, newTurn];
     setTurns(updatedHistory);
     setUserInput('');
     setIsSubmitting(true);
+    setError(null);
 
     try {
       const res = await fetch('/api/simulate', {
@@ -98,51 +114,72 @@ export default function HearingSimulator() {
           history: updatedHistory.map((t) => ({ speaker: t.speaker, text: t.text })),
           userResponse: text,
           caseContext: getActiveCaseContext(scenario.caseContext),
+          scenarioId,
         }),
       });
 
       const data = await res.json();
-      if (data.success) {
-        setAiEngine(data.source === 'ai' ? 'ai' : 'heuristic');
-        if (data.model) setAiModel(data.model);
+      if (gen !== requestGen.current) return; // scenario changed mid-flight
 
-        setTurns((prev) =>
-          prev.map((t) =>
-            t.id === userTurnId
-              ? {
-                  ...t,
-                  score: data.score,
-                  praise: data.praise,
-                  criticism: data.criticism,
-                  suggestedLegalRefinement: data.suggestedLegalRefinement,
-                }
-              : t
-          )
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Coach could not score that answer. Try again.');
+      }
+
+      setAiEngine(data.source === 'ai' ? 'ai' : 'heuristic');
+      if (data.model) setAiModel(data.model);
+
+      setTurns((prev) =>
+        prev.map((t) =>
+          t.id === userTurnId
+            ? {
+                ...t,
+                score: data.score,
+                praise: data.praise,
+                criticism: data.criticism,
+                suggestedLegalRefinement: data.suggestedLegalRefinement,
+              }
+            : t
+        )
+      );
+
+      if (typeof data.score === 'number') {
+        setOverallScore((prev) =>
+          prev == null ? data.score : Math.round((prev + data.score) / 2)
         );
+      }
 
-        if (data.score) {
-          setOverallScore((prev) => Math.round((prev + data.score) / 2));
-        }
-
-        if (data.judgeReply) {
-          setTimeout(() => {
-            setTurns((prev) => [
-              ...prev,
-              { id: `judge-${Date.now()}`, speaker: 'judge', text: data.judgeReply },
-            ]);
-          }, 350);
-        }
+      if (data.judgeReply) {
+        setTimeout(() => {
+          if (gen !== requestGen.current) return;
+          setTurns((prev) => [
+            ...prev,
+            { id: `judge-${Date.now()}`, speaker: 'judge', text: data.judgeReply },
+          ]);
+        }, 350);
       }
     } catch (e) {
+      if (gen !== requestGen.current) return;
       console.error('Simulation turn error:', e);
+      setError(e instanceof Error ? e.message : 'Something went wrong. Please try again.');
+      // Keep the user's text visible; mark turn without score
     } finally {
-      setIsSubmitting(false);
+      if (gen === requestGen.current) setIsSubmitting(false);
     }
   };
 
+  const qualityLabel =
+    overallScore == null
+      ? 'Waiting for your first answer'
+      : overallScore >= 85
+        ? 'Strong rehearsal'
+        : overallScore >= 70
+          ? 'Solid practice'
+          : overallScore >= 50
+            ? 'Keep practicing'
+            : 'Needs work';
+
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6">
-      {/* Scenario picker */}
       <div className="space-y-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <Gavel className="w-3.5 h-3.5 text-cyan-400" />
@@ -154,6 +191,7 @@ export default function HearingSimulator() {
             return (
               <button
                 key={s.id}
+                type="button"
                 onClick={() => setScenarioId(s.id)}
                 className={`p-3 rounded-2xl border-2 text-left transition-all ${
                   active
@@ -187,18 +225,18 @@ export default function HearingSimulator() {
             <p className="text-xs text-slate-400 mt-0.5">{scenario.title}</p>
             {studioTitle && (
               <p className="text-[11px] text-emerald-300/90 mt-1">
-                Carrying Studio case: <span className="font-semibold">{studioTitle}</span>
+                Using your Studio case: <span className="font-semibold">{studioTitle}</span>
               </p>
             )}
             {aiEngine !== 'unknown' && (
               <p className="text-[11px] mt-1 flex items-center gap-1.5">
                 {aiEngine === 'ai' ? (
                   <span className="text-emerald-400 font-semibold">
-                    Live AI judge{aiModel ? ` · ${aiModel}` : ''}
+                    Coach feedback with AI{aiModel ? ` · ${aiModel}` : ''}
                   </span>
                 ) : (
                   <span className="text-amber-400 font-semibold">
-                    Basic coach (built-in tips) — server AI offline
+                    Built-in coaching tips (server AI offline)
                   </span>
                 )}
               </p>
@@ -211,18 +249,13 @@ export default function HearingSimulator() {
             <span className="text-[10px] uppercase font-semibold text-slate-400 block">
               Practice quality
             </span>
-            <span className="text-sm font-bold text-white">
-              {overallScore >= 85
-                ? 'Strong rehearsal'
-                : overallScore >= 70
-                  ? 'Solid practice'
-                  : overallScore >= 50
-                    ? 'Keep practicing'
-                    : 'Needs work'}
+            <span className="text-sm font-bold text-white">{qualityLabel}</span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">
+              Coach feedback — not a win prediction
             </span>
-            <span className="text-[10px] text-slate-500 block mt-0.5">Coach feedback — not a win prediction</span>
           </div>
           <button
+            type="button"
             onClick={() => startScenario(scenario)}
             className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
             title="Restart hearing"
@@ -232,7 +265,20 @@ export default function HearingSimulator() {
         </div>
       </div>
 
-      <div className="min-h-[480px] max-h-[600px] overflow-y-auto p-4 sm:p-6 bg-slate-950/60 rounded-3xl border border-slate-800/80 space-y-6">
+      {error && (
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex-1">{error}</div>
+          <button type="button" className="text-xs underline" onClick={() => setError(null)}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      <div
+        ref={transcriptRef}
+        className="min-h-[480px] max-h-[600px] overflow-y-auto p-4 sm:p-6 bg-slate-950/60 rounded-3xl border border-slate-800/80 space-y-6"
+      >
         {turns.map((turn) => {
           const isJudge = turn.speaker === 'judge';
           return (
@@ -243,7 +289,7 @@ export default function HearingSimulator() {
                     <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
                       <Scale className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-amber-300">Housing Court Judge</span>
+                    <span className="text-amber-300">Practice judge</span>
                   </>
                 ) : (
                   <>
@@ -300,7 +346,7 @@ export default function HearingSimulator() {
         {isSubmitting && (
           <div className="flex items-center gap-2 text-xs text-slate-400 pl-2">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            Judge is reviewing your argument…
+            Coach is reviewing your argument…
           </div>
         )}
       </div>
@@ -314,11 +360,13 @@ export default function HearingSimulator() {
           {scenario.quickAnswers.map((sampleText, idx) => (
             <button
               key={idx}
+              type="button"
               onClick={() => handleSend(sampleText)}
               disabled={isSubmitting}
-              className="p-3 text-left rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-xs text-slate-300 leading-snug"
+              className="p-3 text-left rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-xs text-slate-300 leading-snug disabled:opacity-50"
             >
-              &quot;{sampleText.slice(0, 100)}…&quot;
+              &quot;{sampleText.slice(0, 100)}
+              {sampleText.length > 100 ? '…' : ''}&quot;
             </button>
           ))}
         </div>
@@ -337,6 +385,7 @@ export default function HearingSimulator() {
           className="flex-1 px-4 py-2.5 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
         />
         <button
+          type="button"
           onClick={() => handleSend()}
           disabled={isSubmitting || !userInput.trim()}
           className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
