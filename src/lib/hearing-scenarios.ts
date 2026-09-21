@@ -26,14 +26,14 @@ export const HEARING_SCENARIOS: HearingScenario[] = [
     judgeOpening:
       'Good morning. Civil Court of the City of New York, Kings County, Housing Part. Metropolitan Realty Holdings v. Reynolds, Index No. LT-304928-26. Parties present? Respondent-Tenant, identify yourself and state whether you have counsel.',
     quickAnswers: [
-      'Your Honor, my name is Marcus Reynolds. I appear pro se. I move to dismiss for lack of jurisdiction because Petitioner served only a 3-day demand, not the mandatory 14-day written rent demand under RPAPL § 711(2).',
+      'Your Honor, my name is Marcus Reynolds. I am here without a lawyer. I ask the court to dismiss because the landlord only gave a 3-day demand, not the required 14-day written rent demand under RPAPL § 711(2).',
       'Your Honor, I also raise breach of the warranty of habitability under RPL § 235-b — no heat or hot water for weeks — and request an HPD inspection and rent abatement.',
       'Your Honor, the petition includes late charges and legal fees as rent. Under RPL § 238-a and RPAPL § 702 those are not collectible as rent in this proceeding, and I ask they be stricken.',
     ],
     tips: [
       {
         title: 'Raise jurisdiction first',
-        body: 'A defective predicate notice can end the case before merits. Lead with RPAPL § 711(2).',
+        body: 'A bad notice period can end the case before other issues. Lead with the 14-day rule (RPAPL § 711(2)).',
       },
       {
         title: 'Ask for HPD inspection',

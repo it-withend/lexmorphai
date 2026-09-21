@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { SAMPLE_CASES } from '@/lib/samples';
-import { DocumentAST } from '@/lib/types';
-import { persistStudioCase } from '@/lib/case-context';
+import TrustStrip from '@/components/TrustStrip';
+import SiteFooter from '@/components/SiteFooter';
 import DualPaneViewer from '@/components/DualPaneViewer';
 import RedFlagSidebar from '@/components/RedFlagSidebar';
 import CounterActionModal from '@/components/CounterActionModal';
-import Link from 'next/link';
+import { SAMPLE_CASES } from '@/lib/samples';
+import { DocumentAST } from '@/lib/types';
+import { persistStudioCase } from '@/lib/case-context';
+import { extractTextFromFile } from '@/lib/extract-text';
 import {
   ArrowRight,
   FileText,
@@ -25,6 +28,7 @@ import {
   X,
   ClipboardPaste,
   Shield,
+  Camera,
 } from 'lucide-react';
 
 type Step = 'pick' | 'analyzing' | 'results';
@@ -56,12 +60,18 @@ const SAMPLE_META = [
   },
 ];
 
-const ANALYSIS_STEPS = [
+const SAMPLE_LOAD_STEPS = [
+  'Loading curated practice case…',
+  'Attaching pre-flagged statutory issues…',
+  'Preparing living editor…',
+];
+
+const PASTE_ANALYSIS_STEPS = [
   'Reading document text…',
   'Mapping parties, deadlines & clauses…',
   'Cross-checking statutory rules…',
-  'Building defense viability score…',
-  'Opening living editor + counter-attack tools…',
+  'Rating defense strength (educational band)…',
+  'Opening living editor + Answer tools…',
 ];
 
 function getStoredKeys() {
@@ -78,10 +88,12 @@ export default function StudioPage() {
   const [activeDefectId, setActiveDefectId] = useState<string | undefined>();
   const [isCounterActionOpen, setIsCounterActionOpen] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
+  const [analysisSteps, setAnalysisSteps] = useState<string[]>(PASTE_ANALYSIS_STEPS);
   const [pasteText, setPasteText] = useState('');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisSource, setAnalysisSource] = useState('sample');
   const [analysisModel, setAnalysisModel] = useState('');
+  const [extractNote, setExtractNote] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const persistCaseForSimulator = (ast: DocumentAST) => {
@@ -89,23 +101,25 @@ export default function StudioPage() {
   };
 
   const runAnalysis = useCallback(async (opts: { sampleId?: string; rawText?: string }) => {
+    const steps = opts.sampleId ? SAMPLE_LOAD_STEPS : PASTE_ANALYSIS_STEPS;
+    setAnalysisSteps(steps);
     setStep('analyzing');
     setAnalysisStep(0);
     setUploadError(null);
 
     const interval = setInterval(() => {
       setAnalysisStep((prev) => {
-        if (prev >= ANALYSIS_STEPS.length - 1) {
+        if (prev >= steps.length - 1) {
           clearInterval(interval);
           return prev;
         }
         return prev + 1;
       });
-    }, 550);
+    }, opts.sampleId ? 350 : 550);
 
     try {
       if (opts.sampleId) {
-        await new Promise((r) => setTimeout(r, ANALYSIS_STEPS.length * 450 + 150));
+        await new Promise((r) => setTimeout(r, steps.length * 320 + 100));
         const sample = SAMPLE_CASES.find((s) => s.id === opts.sampleId);
         if (!sample) throw new Error('Unknown sample');
         setCurrentAST(sample.ast);
@@ -147,26 +161,33 @@ export default function StudioPage() {
       return;
     } finally {
       clearInterval(interval);
-      setAnalysisStep(ANALYSIS_STEPS.length - 1);
-      await new Promise((r) => setTimeout(r, 250));
+      setAnalysisStep(steps.length - 1);
+      await new Promise((r) => setTimeout(r, 200));
     }
 
     setStep('results');
     setActiveDefectId(undefined);
   }, []);
 
-  const handleTextFile = async (file: File) => {
-    if (!file.name.match(/\.(txt|md|text)$/i) && file.type && !file.type.startsWith('text/')) {
-      setUploadError('Please upload a .txt text file (or paste the document text).');
-      return;
+  const handleUploadFile = async (file: File) => {
+    setUploadError(null);
+    setExtractNote(null);
+    try {
+      const result = await extractTextFromFile(file);
+      if (result.method === 'unsupported' || !result.text.trim()) {
+        setUploadError(result.note || 'Could not read that file.');
+        return;
+      }
+      if (result.text.trim().length < 40) {
+        setUploadError('Extracted text is too short. Try a clearer photo or paste the notice text.');
+        return;
+      }
+      if (result.note) setExtractNote(result.note);
+      setPasteText(result.text);
+      runAnalysis({ rawText: result.text });
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : 'Could not read file');
     }
-    const text = await file.text();
-    if (text.trim().length < 40) {
-      setUploadError('File is too short to analyze. Paste a fuller notice or lease excerpt.');
-      return;
-    }
-    setPasteText(text);
-    runAnalysis({ rawText: text });
   };
 
   if (step === 'pick') {
@@ -180,13 +201,16 @@ export default function StudioPage() {
               Defense Studio · Audit → Answer → Hearing
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Build your defense like a guided junior counsel
+              Got a notice? We&apos;ll help you read it
             </h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              Start from a real demo case or paste a notice/lease. LexMorph flags statutory defects, drafts a
-              court Answer, and lets you rehearse the hearing — no photo magic, no brittle OCR.
+              Open a practice case, paste text, upload a Word file, or photograph a paper notice. We flag
+              common legal problems in plain English, help you draft an Answer, and practice what to say in
+              court — educational only.
             </p>
           </div>
+
+          <TrustStrip />
 
           <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/80 to-slate-900 border border-amber-500/25 space-y-3">
             <p className="text-sm font-bold text-amber-100 flex items-center gap-2">
@@ -227,9 +251,9 @@ export default function StudioPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { Icon: BookOpen, title: '1. Pick or paste', body: 'Curated cases or your document text' },
-              { Icon: Wand2, title: '2. AI counter-attack', body: 'Red flags + court Answer .docx' },
-              { Icon: Scale, title: '3. Hearing coach', body: 'Practice oral argument with scoring' },
+              { Icon: BookOpen, title: '1. Start simple', body: 'Demo case, paste, photo, or Word file' },
+              { Icon: Wand2, title: '2. Spot issues', body: 'Rules + optional AI → Answer .docx draft' },
+              { Icon: Scale, title: '3. Practice court', body: 'Rehearse what to say (coach, not a lawyer)' },
             ].map(({ Icon, title, body }) => (
               <div key={title} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 flex gap-3">
                 <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 shrink-0">
@@ -257,8 +281,14 @@ export default function StudioPage() {
           <div className="p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-white">
               <ClipboardPaste className="w-4 h-4 text-emerald-400" />
-              Paste document text (notice, lease, demand)
+              Paste notice text — or upload photo / Word / .txt
             </div>
+            {extractNote && (
+              <p className="text-[11px] text-cyan-300/90 flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5" />
+                {extractNote}
+              </p>
+            )}
             <textarea
               id="paste-document"
               value={pasteText}
@@ -268,7 +298,7 @@ export default function StudioPage() {
               className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono leading-relaxed"
             />
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
                     if (pasteText.trim().length < 40) {
@@ -286,15 +316,15 @@ export default function StudioPage() {
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-200 flex items-center gap-2"
                 >
-                  <FileText className="w-4 h-4" />
-                  Upload .txt
+                  <Camera className="w-4 h-4 text-cyan-400" />
+                  Photo / Word / .txt
                 </button>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".txt,.md,text/plain"
+                  accept=".txt,.md,.docx,text/plain,image/*,.png,.jpg,.jpeg,.webp"
                   className="hidden"
-                  onChange={(e) => e.target.files?.[0] && handleTextFile(e.target.files[0])}
+                  onChange={(e) => e.target.files?.[0] && handleUploadFile(e.target.files[0])}
                 />
               </div>
               <Link
@@ -305,11 +335,16 @@ export default function StudioPage() {
                 Or audit ChatGPT legal advice instead →
               </Link>
             </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed">
+              Limitations: PDF not supported yet — photograph the page or paste text. Demo cases use curated
+              fixtures (always work offline). Pasted/photo text uses statutory rules + optional live Groq when
+              configured on the server.
+            </p>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-slate-800" />
-            <span className="text-slate-500 text-sm font-medium">or start with a live demo case</span>
+            <span className="text-slate-500 text-sm font-medium">or open a curated practice case</span>
             <div className="flex-1 h-px bg-slate-800" />
           </div>
 
@@ -347,6 +382,7 @@ export default function StudioPage() {
             Not legal advice. Educational tool for LexHack / pro se awareness.
           </p>
         </main>
+        <SiteFooter />
       </div>
     );
   }
@@ -370,7 +406,7 @@ export default function StudioPage() {
               <p className="text-slate-400 text-sm mt-1">Statutory audit + counter-pleading prep</p>
             </div>
             <div className="space-y-3 text-left">
-              {ANALYSIS_STEPS.map((s, i) => (
+              {analysisSteps.map((s, i) => (
                 <div
                   key={s}
                   className={`flex items-center gap-3 text-sm ${
@@ -471,6 +507,7 @@ export default function StudioPage() {
         onClose={() => setIsCounterActionOpen(false)}
         ast={currentAST}
       />
+      <SiteFooter />
     </div>
   );
 }

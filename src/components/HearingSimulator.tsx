@@ -215,12 +215,18 @@ export default function HearingSimulator() {
         <div className="flex items-center gap-3 bg-slate-950/80 px-4 py-2.5 rounded-2xl border border-slate-800 self-stretch md:self-auto justify-between">
           <div>
             <span className="text-[10px] uppercase font-semibold text-slate-400 block">
-              Courtroom readiness
+              Practice quality
             </span>
-            <span className="text-xl font-mono font-extrabold text-white">
-              {overallScore}
-              <span className="text-cyan-400 text-sm">/100</span>
+            <span className="text-sm font-bold text-white">
+              {overallScore >= 85
+                ? 'Strong rehearsal'
+                : overallScore >= 70
+                  ? 'Solid practice'
+                  : overallScore >= 50
+                    ? 'Keep practicing'
+                    : 'Needs work'}
             </span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">Coach feedback — not a win prediction</span>
           </div>
           <button
             onClick={() => startScenario(scenario)}
@@ -247,7 +253,7 @@ export default function HearingSimulator() {
                   </>
                 ) : (
                   <>
-                    <span className="text-emerald-400">You (pro se)</span>
+                    <span className="text-emerald-400">You (without a lawyer)</span>
                     <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                       <User className="w-3.5 h-3.5" />
                     </div>
@@ -270,7 +276,7 @@ export default function HearingSimulator() {
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-cyan-300 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5" />
-                      Delivery score: {turn.score}/100
+                      Delivery feedback (practice score {turn.score}/100 — not a case outcome)
                     </span>
                   </div>
                   {turn.praise && (

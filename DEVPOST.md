@@ -31,7 +31,7 @@ LexMorph ships three connected tools:
    Three scenarios (NYC notice defect, habitability abatement, CA deposit traps). Practice answers, get scored feedback + statute-aware phrasing. Studio case context carries over.
 
 3. **Advice Auditor** (`/auditor`) — AI Safety track  
-   Paste ChatGPT-style advice. Deterministic danger rules + optional LLM enrichment flag overconfidence, fake citations, “skip court,” etc., then produce a safer educational rewrite + checklist (works offline).
+   Paste ChatGPT-style advice. Deterministic danger rules + optional LLM enrichment flag overconfidence, suspicious-format citations, “skip court,” etc., then produce a safer educational rewrite + checklist (works offline). Risk level follows **max severity** (empty match → `unknown`, never “low/safe”).
 
 ---
 
@@ -79,7 +79,21 @@ LexMorph ships three connected tools:
 - LexHack Builders Fellowship deployment support  
 
 ## Team
-_Add names / roles_
+- **Azamat** — builder / product (solo or add teammates here)
+
+## AI tools used (build & runtime)
+- **Build:** Cursor agent + Claude for scaffolding, refactors, and docs
+- **Runtime (optional):** Groq (primary) / Gemini for paste analyze, Hearing feedback, Auditor enrichment
+- **Deterministic core:** statutory rules, Advice Auditor regex + citation registry (LLM cannot drop rule flags)
+
+## Limitations (honest)
+- Curated demos are fixtures; viability is a qualitative band, not a %.
+- Citations: small registry + format heuristics — not live primary-law verification (still on the roadmap).
+- Safer rewrites are AI-generated / unverified when an LLM is used.
+- Educational only — not legal advice; Answer export is a DRAFT template.
+
+## Privacy
+API routes may forward user text (and optional client-supplied keys) to LLM providers. Keys in the navbar live in `localStorage` but still transit the server. Prefer server env keys for demos.
 
 ## Links
 - **Live app:** https://lexmorphai.vercel.app  

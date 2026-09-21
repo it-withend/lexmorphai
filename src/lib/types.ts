@@ -149,7 +149,7 @@ export interface HearingSimulationState {
 }
 
 /** AI Legal Advice Safety Auditor (Track D) */
-export type AdviceRiskLevel = 'critical' | 'high' | 'moderate' | 'low';
+export type AdviceRiskLevel = 'critical' | 'high' | 'moderate' | 'low' | 'unknown';
 
 export type AdviceFlagCategory =
   | 'hallucinated_law'
