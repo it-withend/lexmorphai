@@ -95,11 +95,18 @@ LexMorph ships three connected tools:
 - Educational only — not legal advice; Answer export is a DRAFT template.
 - Deterministic Auditor mini-eval: **25/25** labeled cases, 100% mustHit recall, 0 mustNotHit FPs (`npm run eval:auditor`, `docs/ADVICE_AUDITOR_EVAL.md`).
 
-## What’s next
-- Expand eval corpus with real clinic / chatbot logs (with consent)
-- Citation link-outs to primary law
-- Multilingual plain-English explanations
-- LexHack Builders Fellowship deployment support
+## Privacy
+API routes may forward user text (and optional client-supplied keys) to LLM providers. Keys in the navbar live in `localStorage` but still transit the server. Prefer server env keys for demos.
+
+## Links
+- **Live app:** https://lexmorphai.vercel.app  
+- **Repo:** https://github.com/it-withend/lexmorphai  
+- **P0 smoke notes:** `docs/P0_TEST_NOTES.md`  
+- **Auditor mini-eval:** `docs/ADVICE_AUDITOR_EVAL.md`
+
+---
+
+## Demo video script (≤ 3:00)
 
 **[0:00–0:20] Hook**  
 “Ninety percent of tenants in Housing Court have no lawyer. Chatbots now tell them to skip their hearing. LexMorph is a Defense Studio that helps people spot illegal notices, draft an Answer, rehearse court — and audit bad AI advice.”
@@ -117,9 +124,9 @@ Flip briefly to **CA lease traps** scenario to show multi-case coaching.
 
 **[1:55–2:35] Advice Auditor (AI Safety)**  
 Open Auditor → **NYC · Skip court & stop rent** demo.  
-Show critical risk score, flags (ignore court, guarantee, fake citation).  
-One click the **CA fake deposit** pack.  
-Say: “We don’t just generate AI text — we stress-test the AI advice people already trust.”
+Show critical risk score, flags (ignore court, guarantee, suspicious-format citation).  
+One click the **CA deposit** pack.  
+Say: “We don’t just generate AI text — we stress-test the AI advice people already trust. Mini-eval: 25/25 labeled cases.”
 
 **[2:35–2:55] Close**  
 “LexMorph: audit, answer, rehearse, and keep unsafe chatbot advice from becoming a default judgment. Built for LexHack 2026. Not legal advice — a prototype for real-world impact.”
