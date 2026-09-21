@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import TrustStrip from '@/components/TrustStrip';
@@ -10,7 +10,13 @@ import RedFlagSidebar from '@/components/RedFlagSidebar';
 import CounterActionModal from '@/components/CounterActionModal';
 import { SAMPLE_CASES } from '@/lib/samples';
 import { DocumentAST } from '@/lib/types';
-import { persistStudioCase } from '@/lib/case-context';
+import {
+  clearStudioCaseLocal,
+  loadStudioCaseLocal,
+  persistStudioCase,
+  saveStudioCaseLocal,
+  type SavedStudioCase,
+} from '@/lib/case-context';
 import { extractTextFromFile } from '@/lib/extract-text';
 import {
   ArrowRight,
@@ -29,6 +35,8 @@ import {
   ClipboardPaste,
   Shield,
   Camera,
+  History,
+  Trash2,
 } from 'lucide-react';
 
 type Step = 'pick' | 'analyzing' | 'results';
@@ -37,10 +45,10 @@ const SAMPLE_META = [
   {
     id: 'nyc-eviction-14day-defect',
     Icon: Building2,
-    title: 'NYC Eviction Notice',
-    subtitle: 'Defective 3-day notice, illegal fees',
-    jurisdiction: 'New York (Kings County)',
-    defects: 3,
+    title: 'NYC eviction notice (example)',
+    subtitle: 'Short notice + illegal fees — good for a first walkthrough',
+    jurisdiction: 'New York',
+    issues: 3,
     band: 'Strong possible defenses',
     color: 'border-amber-500/40 hover:border-amber-400',
     badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
@@ -49,10 +57,10 @@ const SAMPLE_META = [
   {
     id: 'ca-predatory-lease',
     Icon: ScrollText,
-    title: 'CA Predatory Lease',
-    subtitle: 'Illegal deposit, void jury waiver',
-    jurisdiction: 'California (Los Angeles)',
-    defects: 2,
+    title: 'California lease (example)',
+    subtitle: 'Illegal deposit wording — second practice case',
+    jurisdiction: 'California',
+    issues: 2,
     band: 'Strong possible defenses',
     color: 'border-blue-500/40 hover:border-blue-400',
     badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -61,25 +69,25 @@ const SAMPLE_META = [
 ];
 
 const SAMPLE_LOAD_STEPS = [
-  'Loading curated practice case…',
-  'Attaching pre-flagged statutory issues…',
-  'Preparing living editor…',
+  'Opening the practice example…',
+  'Loading the problems we already marked…',
+  'Opening your review screen…',
 ];
 
 const PASTE_ANALYSIS_STEPS = [
-  'Reading document text…',
-  'Mapping parties, deadlines & clauses…',
-  'Cross-checking statutory rules…',
-  'Rating defense strength (educational band)…',
-  'Opening living editor + Answer tools…',
+  'Reading your text…',
+  'Looking for parties, dates, and fees…',
+  'Checking common legal problem patterns…',
+  'Summarizing what you may raise…',
+  'Opening your review screen…',
 ];
 
-function getStoredKeys() {
-  if (typeof window === 'undefined') return { gemini: undefined, groq: undefined };
-  return {
-    gemini: localStorage.getItem('lexmorph_gemini_key') || undefined,
-    groq: localStorage.getItem('lexmorph_groq_key') || undefined,
-  };
+function sourceLabel(source: string, model: string) {
+  if (source === 'sample') return 'Practice example';
+  if (source.includes('groq') || source === 'gemini' || source === 'ai') {
+    return `Checked with AI${model ? ` · ${model}` : ''}`;
+  }
+  return 'Checked with built-in rules';
 }
 
 export default function StudioPage() {
@@ -93,81 +101,129 @@ export default function StudioPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analysisSource, setAnalysisSource] = useState('sample');
   const [analysisModel, setAnalysisModel] = useState('');
+  const [caseKind, setCaseKind] = useState<'practice' | 'own'>('practice');
   const [extractNote, setExtractNote] = useState<string | null>(null);
+  const [savedCase, setSavedCase] = useState<SavedStudioCase | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const persistCaseForSimulator = (ast: DocumentAST) => {
-    persistStudioCase(ast);
+  useEffect(() => {
+    const saved = loadStudioCaseLocal();
+    if (saved) setSavedCase(saved);
+  }, []);
+
+  const persistFull = useCallback(
+    (ast: DocumentAST, opts: { kind: 'practice' | 'own'; source: string; model?: string; paste?: string }) => {
+      persistStudioCase(ast);
+      saveStudioCaseLocal({
+        ast,
+        pasteText: opts.paste,
+        analysisSource: opts.source,
+        analysisModel: opts.model,
+        kind: opts.kind,
+      });
+      setSavedCase({
+        ast,
+        pasteText: opts.paste,
+        analysisSource: opts.source,
+        analysisModel: opts.model,
+        kind: opts.kind,
+        savedAt: Date.now(),
+      });
+    },
+    []
+  );
+
+  const resumeSaved = () => {
+    const saved = loadStudioCaseLocal();
+    if (!saved) return;
+    setCurrentAST(saved.ast);
+    setPasteText(saved.pasteText || '');
+    setAnalysisSource(saved.analysisSource);
+    setAnalysisModel(saved.analysisModel || '');
+    setCaseKind(saved.kind);
+    persistStudioCase(saved.ast);
+    setStep('results');
   };
 
-  const runAnalysis = useCallback(async (opts: { sampleId?: string; rawText?: string }) => {
-    const steps = opts.sampleId ? SAMPLE_LOAD_STEPS : PASTE_ANALYSIS_STEPS;
-    setAnalysisSteps(steps);
-    setStep('analyzing');
-    setAnalysisStep(0);
-    setUploadError(null);
+  const discardSaved = () => {
+    clearStudioCaseLocal();
+    setSavedCase(null);
+  };
 
-    const interval = setInterval(() => {
-      setAnalysisStep((prev) => {
-        if (prev >= steps.length - 1) {
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, opts.sampleId ? 350 : 550);
+  const runAnalysis = useCallback(
+    async (opts: { sampleId?: string; rawText?: string }) => {
+      const steps = opts.sampleId ? SAMPLE_LOAD_STEPS : PASTE_ANALYSIS_STEPS;
+      setAnalysisSteps(steps);
+      setStep('analyzing');
+      setAnalysisStep(0);
+      setUploadError(null);
 
-    try {
-      if (opts.sampleId) {
-        await new Promise((r) => setTimeout(r, steps.length * 320 + 100));
-        const sample = SAMPLE_CASES.find((s) => s.id === opts.sampleId);
-        if (!sample) throw new Error('Unknown sample');
-        setCurrentAST(sample.ast);
-        setAnalysisSource('sample');
-        setAnalysisModel('');
-        persistCaseForSimulator(sample.ast);
-      } else if (opts.rawText) {
-        const keys = getStoredKeys();
-        const res = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            rawText: opts.rawText,
-            apiKey: keys.gemini,
-            groqApiKey: keys.groq,
-          }),
+      const interval = setInterval(() => {
+        setAnalysisStep((prev) => {
+          if (prev >= steps.length - 1) {
+            clearInterval(interval);
+            return prev;
+          }
+          return prev + 1;
         });
-        const data = await res.json();
-        if (!res.ok || !data.success || !data.ast) {
-          throw new Error(data.error || 'Analysis failed');
-        }
-        const ast: DocumentAST = {
-          ...data.ast,
-          sourceText: opts.rawText,
-          reconstructionMode: 'text_audit',
-          originalImageUrl: undefined,
-          embedImageUrl: undefined,
-        };
-        setCurrentAST(ast);
-        setAnalysisSource(data.source || 'text_audit');
-        setAnalysisModel(data.model || '');
-        persistCaseForSimulator(ast);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Analysis failed';
-      setUploadError(message);
-      setStep('pick');
-      clearInterval(interval);
-      return;
-    } finally {
-      clearInterval(interval);
-      setAnalysisStep(steps.length - 1);
-      await new Promise((r) => setTimeout(r, 200));
-    }
+      }, opts.sampleId ? 350 : 550);
 
-    setStep('results');
-    setActiveDefectId(undefined);
-  }, []);
+      try {
+        if (opts.sampleId) {
+          await new Promise((r) => setTimeout(r, steps.length * 320 + 100));
+          const sample = SAMPLE_CASES.find((s) => s.id === opts.sampleId);
+          if (!sample) throw new Error('Unknown practice case');
+          setCurrentAST(sample.ast);
+          setAnalysisSource('sample');
+          setAnalysisModel('');
+          setCaseKind('practice');
+          persistFull(sample.ast, { kind: 'practice', source: 'sample' });
+        } else if (opts.rawText) {
+          // Server uses Vercel GROQ_API_KEY — visitors do not send keys
+          const res = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rawText: opts.rawText }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success || !data.ast) {
+            throw new Error(data.error || 'Could not check this document');
+          }
+          const ast: DocumentAST = {
+            ...data.ast,
+            sourceText: opts.rawText,
+            reconstructionMode: 'text_audit',
+            originalImageUrl: undefined,
+            embedImageUrl: undefined,
+          };
+          setCurrentAST(ast);
+          setAnalysisSource(data.source || 'text_audit');
+          setAnalysisModel(data.model || '');
+          setCaseKind('own');
+          persistFull(ast, {
+            kind: 'own',
+            source: data.source || 'text_audit',
+            model: data.model,
+            paste: opts.rawText,
+          });
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Could not check this document';
+        setUploadError(message);
+        setStep('pick');
+        clearInterval(interval);
+        return;
+      } finally {
+        clearInterval(interval);
+        setAnalysisStep(steps.length - 1);
+        await new Promise((r) => setTimeout(r, 200));
+      }
+
+      setStep('results');
+      setActiveDefectId(undefined);
+    },
+    [persistFull]
+  );
 
   const handleUploadFile = async (file: File) => {
     setUploadError(null);
@@ -179,7 +235,7 @@ export default function StudioPage() {
         return;
       }
       if (result.text.trim().length < 40) {
-        setUploadError('Extracted text is too short. Try a clearer photo or paste the notice text.');
+        setUploadError('We need more text. Try a clearer photo or paste the notice.');
         return;
       }
       if (result.note) setExtractNote(result.note);
@@ -190,6 +246,16 @@ export default function StudioPage() {
     }
   };
 
+  const onUpdateAST = (ast: DocumentAST) => {
+    setCurrentAST(ast);
+    persistFull(ast, {
+      kind: caseKind,
+      source: analysisSource,
+      model: analysisModel,
+      paste: pasteText || undefined,
+    });
+  };
+
   if (step === 'pick') {
     return (
       <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
@@ -198,74 +264,48 @@ export default function StudioPage() {
           <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Scale className="w-3.5 h-3.5" />
-              Defense Studio · Audit → Answer → Hearing
+              No API key needed · works in your browser
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Got a notice? We&apos;ll help you read it
+              Got a notice? Let&apos;s look at it together
             </h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              Open a practice case, paste text, upload a Word file, or photograph a paper notice. We flag
-              common legal problems in plain English, help you draft an Answer, and practice what to say in
-              court — educational only.
+              Pick a ready-made practice example, or paste your own notice. We highlight common problems in
+              plain English and help you draft a response to practice with — this is a learning tool, not a
+              lawyer.
             </p>
           </div>
 
           <TrustStrip />
 
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/80 to-slate-900 border border-amber-500/25 space-y-3">
-            <p className="text-sm font-bold text-amber-100 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
-              I got a notice and I&apos;m scared — start here
-            </p>
-            <p className="text-xs text-slate-400">
-              Three safe paths. No lawyer required to explore. Educational only — not legal advice.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                onClick={() => runAnalysis({ sampleId: 'nyc-eviction-14day-defect' })}
-                className="px-4 py-3 rounded-2xl bg-slate-950/80 border border-amber-500/30 text-left hover:border-amber-400/60 transition-colors"
-              >
-                <p className="text-sm font-semibold text-white">NYC eviction demo</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Defective 3-day notice walkthrough</p>
-              </button>
-              <button
-                onClick={() => {
-                  const el = document.getElementById('paste-document');
-                  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  (el as HTMLTextAreaElement | null)?.focus();
-                }}
-                className="px-4 py-3 rounded-2xl bg-slate-950/80 border border-slate-700 text-left hover:border-emerald-500/50 transition-colors"
-              >
-                <p className="text-sm font-semibold text-white">Paste my notice</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">We flag issues in plain English</p>
-              </button>
-              <Link
-                href="/auditor"
-                className="px-4 py-3 rounded-2xl bg-slate-950/80 border border-violet-500/30 text-left hover:border-violet-400/60 transition-colors"
-              >
-                <p className="text-sm font-semibold text-white">Audit chatbot advice</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Catch &quot;skip court&quot; harm</p>
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { Icon: BookOpen, title: '1. Start simple', body: 'Demo case, paste, photo, or Word file' },
-              { Icon: Wand2, title: '2. Spot issues', body: 'Rules + optional AI → Answer .docx draft' },
-              { Icon: Scale, title: '3. Practice court', body: 'Rehearse what to say (coach, not a lawyer)' },
-            ].map(({ Icon, title, body }) => (
-              <div key={title} className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 flex gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 shrink-0">
-                  <Icon className="w-5 h-5" />
-                </div>
+          {savedCase && (
+            <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+              <div className="flex items-start gap-3">
+                <History className="w-5 h-5 text-cyan-300 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-white">{title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{body}</p>
+                  <p className="text-sm font-semibold text-white">Continue where you left off</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {savedCase.kind === 'own' ? 'Your document' : 'Practice example'} · {savedCase.ast.title}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={resumeSaved}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-cyan-400 text-slate-950"
+                >
+                  Open saved case
+                </button>
+                <button
+                  onClick={discardSaved}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
 
           {uploadError && (
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-200">
@@ -277,11 +317,66 @@ export default function StudioPage() {
             </div>
           )}
 
-          {/* Paste / text upload */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-white">
-              <ClipboardPaste className="w-4 h-4 text-emerald-400" />
-              Paste notice text — or upload photo / Word / .txt
+          {/* A — Practice examples */}
+          <section className="space-y-4">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-300/90">Option A</p>
+                <h2 className="text-xl font-bold text-white mt-0.5">Try a practice example</h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Ready-made cases. Best for demos and first-time visitors. No upload needed.
+                </p>
+              </div>
+              <BookOpen className="w-5 h-5 text-amber-400/80 shrink-0 hidden sm:block" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {SAMPLE_META.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => runAnalysis({ sampleId: s.id })}
+                  className={`group p-5 rounded-2xl bg-slate-900 border-2 text-left transition-all hover:shadow-xl hover:-translate-y-0.5 ${s.color}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${s.iconWrap}`}>
+                      <s.Icon className="w-5 h-5" />
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.badge}`}>
+                      {s.issues} issues flagged
+                    </span>
+                  </div>
+                  <p className="font-bold text-white text-base mt-3">{s.title}</p>
+                  <p className="text-slate-400 text-sm mt-0.5">{s.subtitle}</p>
+                  <p className="text-slate-500 text-xs mt-2 flex items-center gap-1">
+                    <Scale className="w-3 h-3" />
+                    {s.jurisdiction}
+                  </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs text-emerald-400 font-semibold">{s.band}</span>
+                    <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-slate-800" />
+            <span className="text-slate-500 text-sm font-medium">or</span>
+            <div className="flex-1 h-px bg-slate-800" />
+          </div>
+
+          {/* B — Own document */}
+          <section className="p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-emerald-500/20 space-y-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-300/90">Option B</p>
+              <h2 className="text-xl font-bold text-white mt-0.5 flex items-center gap-2">
+                <ClipboardPaste className="w-5 h-5 text-emerald-400" />
+                Check my own notice
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Paste text, or upload a photo / Word file. Saved on this device so it survives a refresh.
+                No API key required.
+              </p>
             </div>
             {extractNote && (
               <p className="text-[11px] text-cyan-300/90 flex items-center gap-1.5">
@@ -294,15 +389,15 @@ export default function StudioPage() {
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
               rows={8}
-              placeholder="Paste the full text of an eviction notice, lease clause set, or demand letter…"
-              className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono leading-relaxed"
+              placeholder="Paste the text of your eviction notice, lease, or demand letter here…"
+              className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 leading-relaxed"
             />
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
                     if (pasteText.trim().length < 40) {
-                      setUploadError('Paste at least a short document excerpt (40+ characters).');
+                      setUploadError('Paste a bit more text (at least ~40 characters).');
                       return;
                     }
                     runAnalysis({ rawText: pasteText });
@@ -310,7 +405,7 @@ export default function StudioPage() {
                   className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 flex items-center gap-2"
                 >
                   <Wand2 className="w-4 h-4" />
-                  Analyze &amp; open editor
+                  Check my document
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -332,54 +427,18 @@ export default function StudioPage() {
                 className="text-xs text-violet-300 hover:text-violet-200 flex items-center gap-1.5"
               >
                 <Shield className="w-3.5 h-3.5" />
-                Or audit ChatGPT legal advice instead →
+                Or check ChatGPT advice instead →
               </Link>
             </div>
             <p className="text-[10px] text-slate-500 leading-relaxed">
-              Limitations: PDF not supported yet — photograph the page or paste text. Demo cases use curated
-              fixtures (always work offline). Pasted/photo text uses statutory rules + optional live Groq when
-              configured on the server.
+              Tip: PDF upload is not ready yet — take a photo of the page or paste the text. Your own cases stay
+              in this browser&apos;s storage until you clear them.
             </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-px bg-slate-800" />
-            <span className="text-slate-500 text-sm font-medium">or open a curated practice case</span>
-            <div className="flex-1 h-px bg-slate-800" />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {SAMPLE_META.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => runAnalysis({ sampleId: s.id })}
-                className={`group p-5 rounded-2xl bg-slate-900 border-2 text-left transition-all hover:shadow-xl hover:-translate-y-0.5 ${s.color}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${s.iconWrap}`}>
-                    <s.Icon className="w-5 h-5" />
-                  </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${s.badge}`}>
-                    {s.defects} defects
-                  </span>
-                </div>
-                <p className="font-bold text-white text-base mt-3">{s.title}</p>
-                <p className="text-slate-400 text-sm mt-0.5">{s.subtitle}</p>
-                <p className="text-slate-500 text-xs mt-2 flex items-center gap-1">
-                  <Scale className="w-3 h-3" />
-                  {s.jurisdiction}
-                </p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-emerald-400 font-semibold">{s.band}</span>
-                  <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                </div>
-              </button>
-            ))}
-          </div>
+          </section>
 
           <p className="text-center text-xs text-slate-600 flex items-center justify-center gap-1.5">
             <Info className="w-3.5 h-3.5" />
-            Not legal advice. Educational tool for LexHack / pro se awareness.
+            Not legal advice. For learning and LexHack demos.
           </p>
         </main>
         <SiteFooter />
@@ -402,8 +461,12 @@ export default function StudioPage() {
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">Building your defense package…</h2>
-              <p className="text-slate-400 text-sm mt-1">Statutory audit + counter-pleading prep</p>
+              <h2 className="text-2xl font-bold text-white">
+                {caseKind === 'practice' || analysisSteps[0]?.includes('practice')
+                  ? 'Loading practice example…'
+                  : 'Checking your document…'}
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">This only takes a few seconds</p>
             </div>
             <div className="space-y-3 text-left">
               {analysisSteps.map((s, i) => (
@@ -449,33 +512,31 @@ export default function StudioPage() {
               </h1>
               <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span>
-                  {currentAST.jurisdiction} · {currentAST.defects.length} defects
+                  {currentAST.jurisdiction} · {currentAST.defects.length} issues found
                 </span>
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                    analysisSource === 'sample'
-                      ? 'bg-slate-800 text-slate-300 border-slate-700'
-                      : analysisSource.includes('groq') || analysisSource === 'gemini'
-                        ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
-                        : 'bg-amber-500/10 text-amber-200 border-amber-500/25'
+                    caseKind === 'practice'
+                      ? 'bg-amber-500/10 text-amber-200 border-amber-500/25'
+                      : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
                   }`}
                 >
-                  {analysisSource === 'sample'
-                    ? 'Curated demo (offline fixtures)'
-                    : analysisSource.includes('groq') || analysisSource === 'gemini'
-                      ? `Live AI · ${analysisModel || analysisSource}`
-                      : `Rules · ${analysisSource}${analysisModel ? ` · ${analysisModel}` : ''}`}
+                  {caseKind === 'practice' ? 'Practice example' : 'Your document'}
                 </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-slate-800 text-slate-300 border-slate-700">
+                  {sourceLabel(analysisSource, analysisModel)}
+                </span>
+                <span className="text-[10px] text-slate-500">Saved on this device</span>
               </p>
             </div>
           </div>
           <Link
             href="/simulator"
-            onClick={() => persistCaseForSimulator(currentAST)}
+            onClick={() => persistStudioCase(currentAST)}
             className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/20 text-xs font-semibold flex items-center gap-1.5"
           >
             <Scale className="w-3.5 h-3.5" />
-            Practice this case in Court
+            Practice what to say in court
           </Link>
         </div>
 
@@ -483,7 +544,7 @@ export default function StudioPage() {
           <div className="xl:col-span-8">
             <DualPaneViewer
               ast={currentAST}
-              onUpdateAST={setCurrentAST}
+              onUpdateAST={onUpdateAST}
               activeDefectId={activeDefectId}
               onSelectDefect={setActiveDefectId}
             />
@@ -494,7 +555,7 @@ export default function StudioPage() {
               onSelectDefect={(id) => setActiveDefectId(id)}
               onOpenCounterAction={() => setIsCounterActionOpen(true)}
               onOpenHearingSimulator={() => {
-                persistCaseForSimulator(currentAST);
+                persistStudioCase(currentAST);
                 window.location.assign('/simulator');
               }}
             />

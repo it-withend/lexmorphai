@@ -29,9 +29,9 @@ export async function GET() {
       note: 'Optional; often requires Google billing. Groq is the primary free path.',
     },
     tip: !groqConfigured
-      ? 'Set GROQ_API_KEY in Vercel → Settings → Environment Variables (Production + Preview), then Redeploy.'
+      ? 'Server AI is off — built-in rules still work. Organizers: set GROQ_API_KEY on Vercel and redeploy.'
       : groqProbe?.ok
-        ? 'Groq is live — Studio paste, Hearing, and Auditor should use AI (not offline templates).'
-        : 'GROQ_API_KEY is set but the ping failed — check the key and that the project was redeployed.',
+        ? 'Server AI is on — visitors do not need their own API key.'
+        : 'Server AI key is set but not responding — check the key and redeploy.',
   });
 }

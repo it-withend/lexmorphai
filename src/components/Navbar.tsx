@@ -5,13 +5,11 @@ import Link from 'next/link';
 import {
   Shield,
   Sparkles,
-  Key,
   FileText,
   Scale,
-  ExternalLink,
-  CheckCircle,
   X,
   Activity,
+  Settings2,
 } from 'lucide-react';
 
 type AiStatus = {
@@ -20,16 +18,8 @@ type AiStatus = {
 };
 
 export default function Navbar() {
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [geminiKey, setGeminiKey] = useState('');
-  const [groqKey, setGroqKey] = useState('');
-  const [isSaved, setIsSaved] = useState(false);
+  const [showDev, setShowDev] = useState(false);
   const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
-
-  useEffect(() => {
-    setGeminiKey(localStorage.getItem('lexmorph_gemini_key') || '');
-    setGroqKey(localStorage.getItem('lexmorph_groq_key') || '');
-  }, [showKeyModal]);
 
   useEffect(() => {
     fetch('/api/ai-status')
@@ -37,20 +27,6 @@ export default function Navbar() {
       .then((d) => setAiStatus(d))
       .catch(() => setAiStatus(null));
   }, []);
-
-  const handleSaveKey = () => {
-    if (geminiKey.trim()) localStorage.setItem('lexmorph_gemini_key', geminiKey.trim());
-    else localStorage.removeItem('lexmorph_gemini_key');
-
-    if (groqKey.trim()) localStorage.setItem('lexmorph_groq_key', groqKey.trim());
-    else localStorage.removeItem('lexmorph_groq_key');
-
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-      setShowKeyModal(false);
-    }, 1000);
-  };
 
   const groqLive = aiStatus?.groq?.live;
   const groqConfigured = aiStatus?.groq?.configured;
@@ -78,7 +54,7 @@ export default function Navbar() {
 
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Shield className="w-3 h-3" />
-              LexHack 2026 · A2J + AI Safety
+              Free demo · no signup
             </div>
 
             {aiStatus && (
@@ -90,10 +66,10 @@ export default function Navbar() {
                       ? 'bg-amber-500/10 text-amber-300 border-amber-500/25'
                       : 'bg-slate-800/80 text-slate-400 border-slate-700'
                 }`}
-                title={aiStatus.tip || ''}
+                title="AI runs on our server — you do not need an API key"
               >
                 <Activity className="w-3 h-3" />
-                {groqLive ? 'Groq live' : groqConfigured ? 'Groq key issue' : 'Offline rules'}
+                {groqLive ? 'AI ready' : groqConfigured ? 'AI warming up' : 'Basic mode'}
               </div>
             )}
           </div>
@@ -124,18 +100,17 @@ export default function Navbar() {
             </Link>
 
             <button
-              id="open-api-keys"
-              onClick={() => setShowKeyModal(true)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-slate-800 transition-all flex items-center gap-1.5"
-              title="Configure AI keys"
+              onClick={() => setShowDev(true)}
+              className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800/40 transition-all"
+              title="About AI (for developers)"
+              aria-label="About AI"
             >
-              <Key className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Optional keys</span>
+              <Settings2 className="w-4 h-4" />
             </button>
 
             <Link
               href="/studio"
-              className="ml-2 px-4 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5"
+              className="ml-1 px-4 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center gap-1.5"
             >
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Open Studio</span>
@@ -144,105 +119,34 @@ export default function Navbar() {
         </div>
       </header>
 
-      {showKeyModal && (
+      {showDev && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                  <Key className="w-4 h-4" />
-                </div>
-                <h3 className="text-base font-semibold text-white">AI Keys</h3>
-              </div>
-              <button onClick={() => setShowKeyModal(false)} className="text-slate-400 hover:text-white">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-white">You do not need an API key</h3>
+              <button onClick={() => setShowDev(false)} className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-              Prefer <code className="text-emerald-400">GROQ_API_KEY</code> in Vercel → Environment Variables
-              (Production + Preview), then Redeploy. Browser keys below are optional for local testing.
-              Demo samples work offline without any key.
+            <p className="text-sm text-slate-300 leading-relaxed">
+              LexMorph uses the project&apos;s server AI when it is turned on. Visitors can paste a notice,
+              audit chatbot advice, and practice court without signing up or pasting keys.
             </p>
-
-            {aiStatus && (
-              <div
-                className={`mb-4 p-3 rounded-xl text-xs border ${
-                  groqLive
-                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-200'
-                    : 'bg-amber-500/10 border-amber-500/25 text-amber-100'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-semibold mb-1">
-                  <Activity className="w-3.5 h-3.5" />
-                  Server AI status
-                </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Practice examples always work. If the badge says &quot;Basic mode,&quot; we still run the built-in
+              safety rules — just without live AI rewrite.
+            </p>
+            {aiStatus?.tip && (
+              <p className="text-[11px] text-slate-400 p-3 rounded-xl bg-slate-950 border border-slate-800">
                 {aiStatus.tip}
-                {aiStatus.groq?.error && (
-                  <p className="mt-1 font-mono text-[10px] opacity-80">{aiStatus.groq.error}</p>
-                )}
-              </div>
+              </p>
             )}
-
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Groq API key (recommended)</label>
-                  <a
-                    href="https://console.groq.com/keys"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
-                  >
-                    Get free key <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-                <input
-                  type="password"
-                  placeholder="gsk_..."
-                  value={groqKey}
-                  onChange={(e) => setGroqKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Gemini API key (optional)</label>
-                  <a
-                    href="https://aistudio.google.com/app/apikey"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] text-slate-400 hover:text-emerald-400 flex items-center gap-1"
-                  >
-                    Google AI Studio <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-                <input
-                  type="password"
-                  placeholder="AIzaSy..."
-                  value={geminiKey}
-                  onChange={(e) => setGeminiKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
-                />
-              </div>
-
-              <div className="flex items-center justify-end pt-1">
-                <button
-                  onClick={handleSaveKey}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs flex items-center gap-1.5"
-                >
-                  {isSaved ? (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Saved
-                    </>
-                  ) : (
-                    'Save browser keys'
-                  )}
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => setShowDev(false)}
+              className="w-full px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold"
+            >
+              Got it
+            </button>
           </div>
         </div>
       )}

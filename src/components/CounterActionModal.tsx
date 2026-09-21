@@ -134,7 +134,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Official court-formatted Answer with affirmative statutory defenses &amp; rent abatement counterclaims.
+                A practice Answer you can edit — check every fact before using anything in a real court.
               </p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
             <div className="p-16 text-center space-y-3">
               <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
               <p className="text-sm font-medium text-slate-300">
-                Synthesizing affirmative defenses from statutory knowledge base...
+                Building your Answer draft from the issues we found…
               </p>
             </div>
           ) : pleading ? (

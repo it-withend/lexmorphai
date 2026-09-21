@@ -98,12 +98,6 @@ export default function HearingSimulator() {
           history: updatedHistory.map((t) => ({ speaker: t.speaker, text: t.text })),
           userResponse: text,
           caseContext: getActiveCaseContext(scenario.caseContext),
-          apiKey:
-            (typeof window !== 'undefined' && localStorage.getItem('lexmorph_gemini_key')) ||
-            undefined,
-          groqApiKey:
-            (typeof window !== 'undefined' && localStorage.getItem('lexmorph_groq_key')) ||
-            undefined,
         }),
       });
 
@@ -204,7 +198,7 @@ export default function HearingSimulator() {
                   </span>
                 ) : (
                   <span className="text-amber-400 font-semibold">
-                    Offline coach (heuristic) — check Groq key /api/ai-status
+                    Basic coach (built-in tips) — server AI offline
                   </span>
                 )}
               </p>

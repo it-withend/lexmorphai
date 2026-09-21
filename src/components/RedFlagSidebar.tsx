@@ -133,7 +133,7 @@ export default function RedFlagSidebar({
             className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-cyan-300 border border-cyan-500/20 transition-colors flex items-center justify-center gap-2"
           >
             <Scale className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Practice this case in Hearing Coach</span>
+            <span>Practice what to say in court</span>
           </button>
         )}
       </div>
@@ -141,7 +141,7 @@ export default function RedFlagSidebar({
       {/* Export Reconstructed Document */}
       <div className="pt-2 border-t border-slate-800/60">
         <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-          Export Living Document
+          Download / print
         </span>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -215,7 +215,7 @@ export default function RedFlagSidebar({
         <div className="space-y-3">
           {ast.defects.length === 0 && (
             <p className="text-xs text-slate-500 leading-relaxed">
-              No automatic statutory triggers matched. Try a curated NYC/CA demo, or paste clearer notice text.
+              No automatic issues matched. Try a practice example, or paste clearer notice text.
             </p>
           )}
           {ast.defects.map((defect) => (

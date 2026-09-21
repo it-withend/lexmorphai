@@ -21,14 +21,6 @@ import {
   Info,
 } from 'lucide-react';
 
-function getStoredKeys() {
-  if (typeof window === 'undefined') return { gemini: undefined, groq: undefined };
-  return {
-    gemini: localStorage.getItem('lexmorph_gemini_key') || undefined,
-    groq: localStorage.getItem('lexmorph_groq_key') || undefined,
-  };
-}
-
 const RISK_STYLES: Record<string, string> = {
   critical: 'text-red-400 bg-red-500/10 border-red-500/30',
   high: 'text-orange-300 bg-orange-500/10 border-orange-500/30',
@@ -52,7 +44,6 @@ export default function AdviceAuditorPage() {
     setLoading(true);
     setError(null);
     try {
-      const keys = getStoredKeys();
       if (sampleId) {
         const pack = SAMPLE_BAD_ADVICE_PACKS.find((p) => p.id === sampleId) || SAMPLE_BAD_ADVICE_PACKS[0];
         setSituation(pack.situation);
@@ -67,8 +58,6 @@ export default function AdviceAuditorPage() {
           adviceText: sampleId ? undefined : adviceText,
           situation: sampleId ? undefined : situation,
           jurisdiction,
-          apiKey: keys.gemini,
-          groqApiKey: keys.groq,
         }),
       });
       const data = await res.json();
@@ -97,15 +86,14 @@ export default function AdviceAuditorPage() {
         <div className="space-y-3 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/20">
             <Shield className="w-3.5 h-3.5" />
-            AI Safety · Ethics &amp; Governance track
+            Check ChatGPT-style legal advice · no API key needed
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            AI Legal Advice Safety Auditor
+            Is this chatbot advice safe?
           </h1>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-            Paste advice from ChatGPT / Gemini / Copilot about eviction, debt, or court. LexMorph
-            stress-tests it for dangerous actions, suspicious-looking citations, overconfidence, and missing
-            disclaimers — then offers a safer educational rewrite.
+            Paste what ChatGPT (or another AI) told you about eviction, debt, or court. We look for dangerous
+            suggestions — like skipping a hearing — and offer a safer educational rewrite. Not a lawyer.
           </p>
         </div>
 
@@ -114,12 +102,10 @@ export default function AdviceAuditorPage() {
         <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 leading-relaxed flex gap-2">
           <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
           <p>
-            <strong className="text-slate-300">How citation checks work:</strong> a small known-good registry
-            labels cites as <em>verified</em> / <em>unknown</em> / <em>suspicious format</em> — we never
-            auto-call something “fake.” Danger phrases (e.g. “skip the hearing”) are separate deterministic
-            rules. Empty matches → risk level <code className="text-slate-300">unknown</code>, not “low.”
-            Safer rewrites may be AI-generated and are always unverified. Always check LawHelp / legislature
-            / LII.
+            <strong className="text-slate-300">About law citations:</strong> we mark them as{' '}
+            <em>known</em>, <em>not in our list</em>, or <em>odd format</em>. We never call something “fake”
+            automatically. If we find nothing, that does <strong className="text-slate-300">not</strong> mean
+            the advice is safe — always double-check with legal aid.
           </p>
         </div>
 
@@ -191,7 +177,8 @@ export default function AdviceAuditorPage() {
 
             <p className="text-[11px] text-slate-500 flex items-start gap-1.5">
               <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              Works offline with deterministic safety rules. Optional free Groq/Gemini key deepens the rewrite.
+              Built-in danger checks always run. When our server AI is on, you also get a clearer rewrite — you
+              do not need your own key.
             </p>
           </div>
 
@@ -224,7 +211,9 @@ export default function AdviceAuditorPage() {
                       </p>
                     </div>
                     <span className="text-xs font-bold uppercase px-2.5 py-1 rounded-full border border-current/30">
-                      {result.riskLevel}
+                      {result.riskLevel === 'unknown'
+                        ? 'No known danger patterns matched'
+                        : result.riskLevel}
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed opacity-95">{result.summary}</p>
@@ -232,8 +221,8 @@ export default function AdviceAuditorPage() {
                     <p className="text-[10px] mt-2 opacity-70 font-mono flex items-center gap-1.5">
                       <Shield className="w-3 h-3" />
                       {source === 'ai' || source === 'gemini' || source?.startsWith('groq')
-                        ? `Live AI · ${model || source}`
-                        : `Rules engine · ${source}${model ? ` · ${model}` : ''}`}
+                        ? `Checked with AI${model ? ` · ${model}` : ''}`
+                        : `Built-in safety rules${model ? ` · ${model}` : ''}`}
                     </p>
                   )}
                 </div>

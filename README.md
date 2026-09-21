@@ -41,7 +41,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Keys can also be pasted in the navbar (**API Keys**) — they are stored in browser `localStorage`, but **requests still go through our Vercel API routes**, which forward content (and the key header when provided) to Groq/Gemini. Prefer a server `GROQ_API_KEY` for demos; rotate any key you paste in the UI.
+Keys: visitors do **not** need to paste an API key. The app uses the server `GROQ_API_KEY` on Vercel when configured. (Developers may still set env keys locally.)
 
 ## Limitations
 

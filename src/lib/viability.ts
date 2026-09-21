@@ -26,12 +26,12 @@ export function bandLabel(band: ViabilityBand): string {
 export function bandDescription(band: ViabilityBand): string {
   switch (band) {
     case 'strong':
-      return 'Several statutory issues look worth raising. This is not a prediction of what a court will do.';
+      return 'We found several problems that often help tenants push back. A court still decides — this is not a win prediction.';
     case 'moderate':
-      return 'There are arguable defects or counterclaims. Outcomes depend on facts, evidence, and the judge.';
+      return 'There are arguable issues. What happens next depends on your facts, evidence, and the judge.';
     case 'limited':
-      return 'Fewer automatic triggers matched. Still review the document carefully with a legal aid clinic if you can.';
+      return 'Fewer automatic issues matched. Still read carefully and talk to legal aid if you have a court date.';
     default:
-      return 'Automated rules found little. Paste clearer text or open a curated demo — and get human help if you have a hearing.';
+      return 'Automatic checks found little. Try a practice example or clearer text — and get human help if you have a hearing.';
   }
 }

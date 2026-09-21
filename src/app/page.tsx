@@ -160,8 +160,8 @@ export default function LandingPage() {
               </div>
               <h3 className="text-base font-bold text-white">Advice Auditor · AI Safety</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Chatbots tell people to skip court or invent statutes. We stress-test that advice with
-                deterministic danger rules (works offline) plus optional LLM enrichment — then a safer rewrite.
+                Chatbots sometimes tell people to skip court or invent laws. Paste that advice here — we flag
+                dangerous tips and suggest a safer rewrite. No API key needed.
               </p>
               <div className="text-[11px] text-violet-300/90 space-y-1">
                 <p className="flex items-center gap-1.5">
@@ -210,8 +210,8 @@ export default function LandingPage() {
               </div>
               <h3 className="text-base font-bold text-white">Hearing Coach</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Rehearse Housing Court. Get scored feedback and statute-aware phrasing before you speak to a real
-                judge.
+                Practice speaking in Housing Court. Get feedback on what to say before you face a real judge —
+                coaching only, not a prediction of who wins.
               </p>
               <div className="text-[11px] text-cyan-300/90 space-y-1">
                 <p className="flex items-center gap-1.5">
@@ -244,8 +244,9 @@ export default function LandingPage() {
               the page (on-device OCR), or Word (.docx).
             </li>
             <li>
-              <strong className="text-slate-300">Practice demos</strong> are curated fixtures so judging works
-              offline. Your own paste/photo uses statutory rules + optional server Groq when configured.
+              <strong className="text-slate-300">Practice examples</strong> are ready-made so demos always work.
+              Your own paste/photo uses built-in checks plus our server AI when it is turned on — you never need
+              your own API key.
             </li>
             <li>
               <strong className="text-slate-300">Answer drafts</strong> are educational templates — not guaranteed

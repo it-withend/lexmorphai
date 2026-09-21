@@ -52,7 +52,7 @@ export default function DocumentEditor({
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-semibold text-white tracking-wide uppercase">
-            Living Document Editor
+            Document editor
           </span>
           <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
             · click any clause to edit

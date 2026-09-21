@@ -60,9 +60,9 @@ export default function TrustStrip({ compact = false }: { compact?: boolean }) {
       </div>
       <p className="text-[10px] text-slate-500 leading-relaxed flex items-start gap-1.5">
         <Lock className="w-3 h-3 mt-0.5 shrink-0" />
-        Privacy: demo cases stay local. Pasted text / photos you analyze are sent to our Vercel API; if a
-        server Groq/Gemini key is configured, text may be sent to that LLM provider for enrichment. Do not
-        paste secrets you cannot share with those processors. Prefer redacting SSN / bank numbers.
+        Privacy: practice examples stay on your device. If you paste or photograph a notice, the text goes to
+        our server. When our AI is on, that text may be sent to the AI provider. Do not paste Social Security
+        numbers or bank details.
       </p>
     </aside>
   );

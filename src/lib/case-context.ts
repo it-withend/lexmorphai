@@ -3,6 +3,16 @@ import type { CounterPleading, DocumentAST } from './types';
 const STUDIO_CTX_KEY = 'lexmorph_studio_case_context';
 const ACTIVE_CTX_KEY = 'lexmorph_case_context';
 const TITLE_KEY = 'lexmorph_case_title';
+const STUDIO_SAVE_KEY = 'lexmorph_studio_saved_case_v1';
+
+export type SavedStudioCase = {
+  ast: DocumentAST;
+  pasteText?: string;
+  analysisSource: string;
+  analysisModel?: string;
+  kind: 'practice' | 'own';
+  savedAt: number;
+};
 
 /** Build a coach-ready case brief from Studio AST (+ optional pleading). */
 export function buildCaseContextFromAst(ast: DocumentAST, pleading?: CounterPleading | null): string {
@@ -36,6 +46,40 @@ export function persistStudioCase(ast: DocumentAST, pleading?: CounterPleading |
     sessionStorage.setItem(STUDIO_CTX_KEY, ctx);
     sessionStorage.setItem(ACTIVE_CTX_KEY, ctx);
     sessionStorage.setItem(TITLE_KEY, ast.title);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Save full Studio case so it survives page reload (browser localStorage). */
+export function saveStudioCaseLocal(payload: Omit<SavedStudioCase, 'savedAt'>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const data: SavedStudioCase = { ...payload, savedAt: Date.now() };
+    localStorage.setItem(STUDIO_SAVE_KEY, JSON.stringify(data));
+    persistStudioCase(payload.ast);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+export function loadStudioCaseLocal(): SavedStudioCase | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STUDIO_SAVE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SavedStudioCase;
+    if (!parsed?.ast?.id) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function clearStudioCaseLocal(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(STUDIO_SAVE_KEY);
   } catch {
     /* ignore */
   }
