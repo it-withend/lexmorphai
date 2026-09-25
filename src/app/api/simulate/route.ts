@@ -22,6 +22,11 @@ CRITICAL LEGAL GROUND TRUTH (never contradict):
 - Educational coaching only — not legal advice; never guarantee case outcomes.
 `;
 
+const SHORT_NOTICE_OK =
+  /(3[\s-]?day|three[\s-]?day).{0,40}(enough|valid|legal|sufficient|proper|fine|ok|okay)|((enough|valid|legal|sufficient).{0,40}(3[\s-]?day|three[\s-]?day))/i;
+const REJECTS_SHORT_NOTICE =
+  /not (the )?(required|enough|valid|legal)|instead of|defective|dismiss|fourteen|14[\s-]?day|711/;
+
 function applyNoticeGuardrails(
   result: {
     score: number;
@@ -34,14 +39,16 @@ function applyNoticeGuardrails(
   userResponse: string,
   caseContext: string
 ) {
-  const blob = `${userResponse}\n${caseContext}\n${result.praise}\n${result.criticism}\n${result.suggestedLegalRefinement}\n${result.judgeReply}`.toLowerCase();
-  const affirmsShortNotice =
-    /(3[\s-]?day|three[\s-]?day).{0,40}(enough|valid|legal|required|sufficient|proper|fine|ok|okay)/i.test(blob) ||
-    /(enough|valid|legal|required|sufficient).{0,40}(3[\s-]?day|three[\s-]?day)/i.test(blob);
+  const user = userResponse.toLowerCase();
+  // Never scan caseContext — it always mentions the defective 3-day notice.
+  const aiOut = `${result.praise}\n${result.criticism}\n${result.suggestedLegalRefinement}\n${result.judgeReply}`;
+  const userCites14 = /14[\s-]?day|fourteen|711|jurisdiction|defective/.test(user);
+  const userAffirmsShort = SHORT_NOTICE_OK.test(user) && !REJECTS_SHORT_NOTICE.test(user);
+  const aiAffirmsShort = SHORT_NOTICE_OK.test(aiOut) && !REJECTS_SHORT_NOTICE.test(aiOut.toLowerCase());
 
   const isNyNoticeCase = /711|14[\s-]?day|nonpayment|new york|nyc/i.test(caseContext);
 
-  if (isNyNoticeCase && affirmsShortNotice) {
+  if (isNyNoticeCase && userAffirmsShort && !userCites14) {
     return {
       ...result,
       score: Math.min(result.score, 35),
@@ -55,8 +62,22 @@ function applyNoticeGuardrails(
     };
   }
 
-  // Soft bump when tenant correctly cites 14-day / 711
-  if (isNyNoticeCase && /14|711|jurisdiction|defective/.test(userResponse.toLowerCase())) {
+  if (isNyNoticeCase && aiAffirmsShort) {
+    return {
+      ...result,
+      criticism:
+        result.criticism ||
+        'Keep the record on the 14-day written demand. A short-day notice is not a valid NY nonpayment predicate.',
+      suggestedLegalRefinement:
+        'Your Honor, Petitioner served only a short-day demand. Under RPAPL § 711(2), a written rent demand of no less than fourteen days is required; I move to dismiss for lack of a valid predicate notice.',
+      judgeReply:
+        result.judgeReply.includes('711')
+          ? result.judgeReply
+          : 'That jurisdictional point is on the record. Counselor, produce the predicate notice. Tenant, anything else before I hear the landlord?',
+    };
+  }
+
+  if (isNyNoticeCase && userCites14) {
     return {
       ...result,
       score: Math.max(result.score, 88),

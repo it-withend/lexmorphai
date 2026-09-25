@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { DocumentAST, CounterPleading } from '@/lib/types';
-import confetti from 'canvas-confetti';
 import {
   Scale,
   CheckSquare,
@@ -79,12 +78,6 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
 
   const handleSignPleading = () => {
     setIsSigned(true);
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.7 },
-      colors: ['#10b981', '#06b6d4', '#f59e0b'],
-    });
   };
 
   const handleExportDocx = async () => {

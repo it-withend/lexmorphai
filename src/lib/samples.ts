@@ -236,7 +236,7 @@ export const SAMPLE_CASES: SampleCase[] = [
       verificationBlock: {
         declarantName: 'MARCUS A. REYNOLDS',
         penaltyOfPerjuryClause:
-          'I, MARCUS A. REYNOLDS, affirm under penalty of perjury under the laws of New York that I am the Respondent in this proceeding; that I have read the foregoing Verified Answer and know the contents thereof; and that the same are true to my own knowledge.',
+          'I, MARCUS A. REYNOLDS, affirm under penalty of perjury under the laws of New York that I am the Respondent in this proceeding; that I have read the foregoing Answer draft and know the contents thereof; and that the same are true to my own knowledge.',
         date: '2026-09-15',
         county: 'Kings County, State of New York',
         signatureStatus: 'electronically_signed',

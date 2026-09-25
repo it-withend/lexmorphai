@@ -223,15 +223,18 @@ export default function AdviceAuditorPage() {
                       <p className="text-[11px] font-semibold uppercase tracking-wider opacity-80">
                         Overall advice risk
                       </p>
-                      <p className="text-4xl font-extrabold font-mono">
-                        {result.overallRisk}
-                        <span className="text-lg">/100</span>
+                      <p className="text-4xl font-extrabold tracking-tight uppercase">
+                        {result.riskLevel === 'unknown' ? 'Unclear' : result.riskLevel}
+                      </p>
+                      <p className="text-[11px] mt-1 opacity-70">
+                        {result.flags.filter((f) => f.severity === 'critical').length} critical ·{' '}
+                        {result.flags.length} flags · band, not a win/loss score
                       </p>
                     </div>
                     <span className="text-xs font-bold uppercase px-2.5 py-1 rounded-full border border-current/30">
                       {result.riskLevel === 'unknown'
                         ? 'No known danger patterns matched'
-                        : result.riskLevel}
+                        : `${result.flags.filter((f) => f.severity === 'critical').length || result.flags.length} harm patterns`}
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed opacity-95">{result.summary}</p>
