@@ -70,7 +70,7 @@ export default function HearingSimulator() {
   }, [turns, isSubmitting]);
 
   const startScenario = (s: HearingScenario) => {
-    requestGen.current += 1; // invalidate in-flight answers
+    const gen = (requestGen.current += 1);
     setTurns([
       {
         id: 'turn-1',
@@ -83,7 +83,7 @@ export default function HearingSimulator() {
     setError(null);
     setAiEngine('unknown');
     setAiModel('');
-    setIsSubmitting(false);
+    setIsSubmitting(true);
     setStudioTitle(getStudioCaseTitle());
     try {
       const merged = getActiveCaseContext(s.caseContext);
@@ -91,6 +91,32 @@ export default function HearingSimulator() {
     } catch {
       /* ignore */
     }
+
+    fetch('/api/simulate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phase: 'open',
+        history: [{ speaker: 'judge', text: s.judgeOpening }],
+        userResponse: '[CALL THE CALENDAR]',
+        caseContext: getActiveCaseContext(s.caseContext),
+        scenarioId: s.id,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (gen !== requestGen.current) return;
+        if (!res.ok || !data.success || !data.judgeReply) return;
+        setAiEngine(data.source === 'ai' ? 'ai' : 'heuristic');
+        if (data.model) setAiModel(data.model);
+        setTurns([{ id: 'turn-1', speaker: 'judge', text: data.judgeReply }]);
+      })
+      .catch(() => {
+        /* keep the written opening */
+      })
+      .finally(() => {
+        if (gen === requestGen.current) setIsSubmitting(false);
+      });
   };
 
   const handleSend = async (textToSend?: string) => {
@@ -182,7 +208,7 @@ export default function HearingSimulator() {
     <div className="w-full max-w-5xl mx-auto space-y-6">
       <div className="space-y-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-          <Gavel className="w-3.5 h-3.5 text-cyan-400" />
+          <Gavel className="w-3.5 h-3.5 text-brass" />
           Choose hearing scenario
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -195,12 +221,12 @@ export default function HearingSimulator() {
                 onClick={() => setScenarioId(s.id)}
                 className={`p-3 rounded-2xl border-2 text-left transition-all ${
                   active
-                    ? 'bg-cyan-500/10 border-cyan-400/60 text-white'
+                    ? 'bg-brass/10 border-brass/60 text-white'
                     : `bg-slate-900 border-slate-800 text-slate-300 ${s.accent}`
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1.5">
-                  <s.Icon className={`w-4 h-4 ${active ? 'text-cyan-300' : 'text-slate-400'}`} />
+                  <s.Icon className={`w-4 h-4 ${active ? 'text-brass' : 'text-slate-400'}`} />
                   <span className="text-xs font-bold">{s.shortLabel}</span>
                 </div>
                 <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{s.title}</p>
@@ -212,26 +238,26 @@ export default function HearingSimulator() {
 
       <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border border-slate-800 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+          <div className="w-12 h-12 rounded-2xl bg-brass/10 border border-brass/25 flex items-center justify-center text-brass">
             <Landmark className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-white flex flex-wrap items-center gap-2">
               Hearing Coach
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brass/10 text-brass border border-brass/25 font-semibold">
                 {scenario.jurisdiction}
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">{scenario.title}</p>
             {studioTitle && (
-              <p className="text-[11px] text-emerald-300/90 mt-1">
+              <p className="text-[11px] text-brass-bright/90 mt-1">
                 Using your Studio case: <span className="font-semibold">{studioTitle}</span>
               </p>
             )}
             {aiEngine !== 'unknown' && (
               <p className="text-[11px] mt-1 flex items-center gap-1.5">
                 {aiEngine === 'ai' ? (
-                  <span className="text-emerald-400 font-semibold">
+                  <span className="text-brass font-semibold">
                     Coach feedback with AI{aiModel ? ` · ${aiModel}` : ''}
                   </span>
                 ) : (
@@ -300,8 +326,8 @@ export default function HearingSimulator() {
                   </>
                 ) : (
                   <>
-                    <span className="text-emerald-400">You (without a lawyer)</span>
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <span className="text-brass">You (without a lawyer)</span>
+                    <div className="w-6 h-6 rounded-full bg-brass/20 border border-brass/30 flex items-center justify-center text-brass">
                       <User className="w-3.5 h-3.5" />
                     </div>
                   </>
@@ -312,23 +338,23 @@ export default function HearingSimulator() {
                 className={`max-w-2xl p-4 sm:p-5 rounded-2xl text-sm leading-relaxed ${
                   isJudge
                     ? 'bg-[#f3ead8] text-[#1c1610] border border-[#d9c9a8] font-docket'
-                    : 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-50'
+                    : 'bg-ink-2 border border-brass/40 text-cream'
                 }`}
               >
                 {turn.text}
               </div>
 
               {!isJudge && turn.score != null && (
-                <div className="w-full max-w-2xl p-3.5 rounded-xl bg-slate-900/90 border border-cyan-500/30 text-xs space-y-2">
+                <div className="w-full max-w-2xl p-3.5 rounded-xl bg-slate-900/90 border border-brass/30 text-xs space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-cyan-300 flex items-center gap-1">
+                    <span className="font-semibold text-brass flex items-center gap-1">
                       <Award className="w-3.5 h-3.5" />
                       Delivery feedback (practice score {turn.score}/100 — not a case outcome)
                     </span>
                   </div>
                   {turn.praise && (
                     <div className="text-slate-200">
-                      <strong className="text-emerald-400">Strong:</strong> {turn.praise}
+                      <strong className="text-brass">Strong:</strong> {turn.praise}
                     </div>
                   )}
                   {turn.criticism && (
@@ -341,7 +367,7 @@ export default function HearingSimulator() {
                       <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider block mb-0.5">
                         Better phrasing
                       </span>
-                      <em className="text-cyan-200">&quot;{turn.suggestedLegalRefinement}&quot;</em>
+                      <em className="text-brass-bright">&quot;{turn.suggestedLegalRefinement}&quot;</em>
                     </div>
                   )}
                 </div>
@@ -361,7 +387,7 @@ export default function HearingSimulator() {
 
       <div className="space-y-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+          <Sparkles className="w-3.5 h-3.5 text-brass" />
           Try a recommended line — then add your own
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -372,9 +398,9 @@ export default function HearingSimulator() {
                 onClick={() => handleSend(sampleText)}
                 disabled={isSubmitting}
                 title={sampleText}
-                className="p-3 text-left rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 disabled:opacity-50"
+                className="p-3 text-left rounded-xl bg-slate-900 border border-slate-800 hover:border-brass/50 disabled:opacity-50"
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-brass">
                   {scenario.quickLabels[idx] || `Argument ${idx + 1}`}
                 </span>
                 <p className="text-xs text-slate-300 leading-snug mt-1 line-clamp-3">{sampleText}</p>
@@ -399,7 +425,7 @@ export default function HearingSimulator() {
           type="button"
           onClick={() => handleSend()}
           disabled={isSubmitting || !userInput.trim()}
-          className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5"
+          className="px-5 py-2.5 bg-brass hover:bg-brass-bright disabled:opacity-50 text-ink font-bold rounded-xl text-xs flex items-center gap-1.5"
         >
           <Send className="w-3.5 h-3.5" />
           Answer Judge

@@ -29,7 +29,7 @@ export default function TrustStrip({ compact = false }: { compact?: boolean }) {
           rel="noreferrer"
           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-950/70 border border-slate-700 text-slate-300 hover:text-white"
         >
-          <Scale className="w-3 h-3 text-emerald-400" />
+          <Scale className="w-3 h-3 text-brass" />
           LawHelpNY
           <ExternalLink className="w-3 h-3 opacity-50" />
         </a>
@@ -53,7 +53,7 @@ export default function TrustStrip({ compact = false }: { compact?: boolean }) {
         </a>
         <Link
           href="/auditor"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 text-violet-200 hover:text-white"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brass/10 border border-brass/25 text-brass-bright hover:text-cream"
         >
           Audit chatbot advice
         </Link>

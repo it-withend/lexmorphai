@@ -49,8 +49,8 @@ function FlagCard({
       </div>
       {flag.excerpt ? <p className="text-slate-500 font-mono text-[11px]">“{flag.excerpt}”</p> : null}
       <p className="text-slate-400 leading-relaxed">{flag.explanation}</p>
-      <p className="text-emerald-300/90 leading-relaxed">
-        <strong className="text-emerald-400">Safer:</strong> {flag.saferAlternative}
+      <p className="text-brass-bright/90 leading-relaxed">
+        <strong className="text-brass">Safer:</strong> {flag.saferAlternative}
       </p>
     </div>
   );
@@ -82,7 +82,7 @@ const RISK_STYLES: Record<string, string> = {
   critical: 'text-red-400 bg-red-500/10 border-red-500/30',
   high: 'text-orange-300 bg-orange-500/10 border-orange-500/30',
   moderate: 'text-amber-300 bg-amber-500/10 border-amber-500/30',
-  low: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30',
+  low: 'text-brass-bright bg-brass/10 border-brass/30',
   unknown: 'text-slate-300 bg-slate-500/10 border-slate-500/30',
 };
 
@@ -141,11 +141,11 @@ export default function AdviceAuditorPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-ink text-cream">
       <Navbar />
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-10 space-y-8">
         <div className="space-y-3 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/20">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-brass/10 text-brass border border-brass/25">
             <Shield className="w-3.5 h-3.5" />
             Check ChatGPT-style legal advice · no API key needed
           </div>
@@ -169,7 +169,7 @@ export default function AdviceAuditorPage() {
                 onChange={(e) => setSituation(e.target.value)}
                 rows={3}
                 placeholder="e.g. Brooklyn 3-day rent demand, no heat…"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brass"
               />
             </label>
 
@@ -178,7 +178,7 @@ export default function AdviceAuditorPage() {
               <input
                 value={jurisdiction}
                 onChange={(e) => setJurisdiction(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-violet-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-brass"
               />
             </label>
 
@@ -191,7 +191,7 @@ export default function AdviceAuditorPage() {
                 onChange={(e) => setAdviceText(e.target.value)}
                 rows={12}
                 placeholder="Paste ChatGPT / other model output here…"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-violet-500 font-mono leading-relaxed"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brass font-mono leading-relaxed"
               />
             </label>
 
@@ -206,7 +206,7 @@ export default function AdviceAuditorPage() {
               <button
                 onClick={() => runAudit()}
                 disabled={loading}
-                className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl font-semibold text-sm bg-brass hover:bg-brass-bright text-ink disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
                 Audit this advice
@@ -232,7 +232,7 @@ export default function AdviceAuditorPage() {
               do not need your own key.
             </p>
 
-            <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-100/85 leading-relaxed">
+            <div className="p-3 rounded-xl bg-brass/10 border border-brass/25 text-[11px] text-cream/85 leading-relaxed">
               <p className="font-semibold text-white flex items-center gap-1.5">
                 <BadgeCheck className="w-3.5 h-3.5" />
                 Safety floor for judges
@@ -247,14 +247,14 @@ export default function AdviceAuditorPage() {
           <div className="space-y-4">
             {!result && !loading && (
               <div className="h-full min-h-[320px] rounded-3xl border border-dashed border-slate-800 bg-slate-900/30 flex flex-col items-center justify-center text-center p-8 text-slate-500 text-sm gap-3">
-                <Shield className="w-10 h-10 text-violet-400/50" />
+                <Shield className="w-10 h-10 text-brass/50" />
                 <p>Results appear here — risk score, flags, safer rewrite, verification checklist.</p>
               </div>
             )}
 
             {loading && (
               <div className="rounded-3xl border border-slate-800 bg-slate-900/50 p-10 flex flex-col items-center gap-3 text-slate-300">
-                <Loader2 className="w-8 h-8 animate-spin text-violet-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-brass" />
                 <p className="text-sm">Scanning for dangerous patterns &amp; overconfidence…</p>
               </div>
             )}
@@ -340,16 +340,16 @@ export default function AdviceAuditorPage() {
                       {highlightAdvice(auditedText || adviceText, result.flags)}
                     </p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/20 space-y-2">
+                  <div className="p-4 rounded-2xl bg-slate-950 border border-brass/25 space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-brass-bright">
                         Safer educational rewrite
                       </h2>
                       <button
                         onClick={copyRewrite}
                         className="text-[11px] px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1"
                       >
-                        {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        {copied ? <Check className="w-3 h-3 text-brass" /> : <Copy className="w-3 h-3" />}
                         {copied ? 'Copied' : 'Copy'}
                       </button>
                     </div>
@@ -365,7 +365,7 @@ export default function AdviceAuditorPage() {
 
                 <div className="p-5 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2">
                   <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 text-brass" />
                     Verification checklist
                   </h2>
                   <ul className="space-y-1.5 text-xs text-slate-400">
@@ -378,7 +378,7 @@ export default function AdviceAuditorPage() {
                         ]
                     ).map((c) => (
                       <li key={c} className="flex gap-2">
-                        <span className="text-emerald-500">•</span>
+                        <span className="text-brass">•</span>
                         {c}
                       </li>
                     ))}
@@ -388,14 +388,14 @@ export default function AdviceAuditorPage() {
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href="/studio"
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-brass/15 text-brass-bright border border-brass/25 flex items-center gap-1.5"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     Open Defense Studio
                   </Link>
                   <Link
                     href="/simulator"
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/25 flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-brass/15 text-brass-bright border border-brass/25 flex items-center gap-1.5"
                   >
                     <Scale className="w-3.5 h-3.5" />
                     Practice Hearing

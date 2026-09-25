@@ -7,6 +7,7 @@ interface SimulationRequest {
   userResponse?: string;
   caseContext?: string;
   scenarioId?: string;
+  phase?: 'open' | 'turn';
 }
 
 const DEFAULT_CASE_CONTEXT =
@@ -82,6 +83,20 @@ function applyNoticeGuardrails(
   return result;
 }
 
+/** Groq sometimes writes the tenant's line into judgeReply ("Your Honor…"). Never let that reach the bench. */
+function asJudgeVoice(text: string, fallback: string): string {
+  const t = (text || '').trim();
+  if (!t) return fallback;
+  if (
+    /^your honor\b/i.test(t) ||
+    /\bi (request|move|demand|ask the court|also raise)\b/i.test(t) ||
+    /\bour lease\b/i.test(t)
+  ) {
+    return fallback;
+  }
+  return t;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rl = rateLimit(`simulate:${clientKeyFromRequest(req)}`, 30, 60_000);
@@ -100,8 +115,14 @@ export async function POST(req: NextRequest) {
     }
 
     const history = Array.isArray(body.history) ? body.history : [];
-    const userResponse = typeof body.userResponse === 'string' ? body.userResponse.trim() : '';
-    if (!userResponse) {
+    const phase = body.phase === 'open' ? 'open' : 'turn';
+    const userResponse =
+      phase === 'open'
+        ? '[CALL THE CALENDAR — speak first as the judge. Do not write as the tenant.]'
+        : typeof body.userResponse === 'string'
+          ? body.userResponse.trim()
+          : '';
+    if (phase === 'turn' && !userResponse) {
       return NextResponse.json(
         { success: false, error: 'userResponse is required (non-empty string)' },
         { status: 400 }
@@ -123,12 +144,37 @@ export async function POST(req: NextRequest) {
     );
 
     if (aiResult) {
-      const guarded = applyNoticeGuardrails(aiResult, userResponse, caseContext);
+      const fallbackJudge =
+        phase === 'open'
+          ? 'Appearances. Tenant, identify yourself and tell me, in one sentence, the statute you rely on and the remedy you want today.'
+          : `I heard that. Counsel, I will come to you. Tenant, stay on that last point — what exact order are you asking me to sign?`;
+      const guarded = applyNoticeGuardrails(
+        {
+          ...aiResult,
+          judgeReply: asJudgeVoice(aiResult.judgeReply, fallbackJudge),
+        },
+        userResponse,
+        caseContext
+      );
       return NextResponse.json({
         success: true,
         ...guarded,
+        judgeReply: asJudgeVoice(guarded.judgeReply, fallbackJudge),
         source: 'ai',
         model: aiResult.model,
+      });
+    }
+
+    if (phase === 'open') {
+      return NextResponse.json({
+        success: true,
+        score: 0,
+        praise: '',
+        criticism: '',
+        suggestedLegalRefinement: '',
+        judgeReply:
+          'Appearances. Tenant, identify yourself. In one sentence: which statute do you rely on, and what order do you want today?',
+        source: 'heuristic',
       });
     }
 
@@ -223,6 +269,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       ...heuristic,
+      judgeReply: asJudgeVoice(
+        heuristic.judgeReply,
+        `I heard you say “${snippet}${userResponse.length > 90 ? '…' : ''}.” Counsel, I will come to you. Tenant, what order do you want today?`
+      ),
       source: 'heuristic',
     });
   } catch (err: unknown) {

@@ -50,7 +50,7 @@ export default function DocumentEditor({
     <div className="relative w-full h-full flex flex-col bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800/80 bg-slate-950/60">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-brass animate-pulse" />
           <span className="text-xs font-semibold text-white tracking-wide uppercase">
             Document editor
           </span>
@@ -174,11 +174,11 @@ export default function DocumentEditor({
                         value={section.content}
                         onChange={(e) => handleSectionTextChange(section.id, e.target.value)}
                         rows={4}
-                        className="w-full p-3 font-serif text-sm border border-emerald-500 rounded bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                        className="w-full p-3 font-serif text-sm border border-brass rounded bg-white focus:outline-none focus:ring-2 focus:ring-brass"
                       />
                       <button
                         onClick={() => setEditingSectionId(null)}
-                        className="px-3 py-1 bg-emerald-600 text-white text-xs rounded font-sans flex items-center gap-1 ml-auto"
+                        className="px-3 py-1 bg-brass text-ink text-xs rounded font-sans flex items-center gap-1 ml-auto"
                       >
                         <Check className="w-3.5 h-3.5" />
                         Done
@@ -200,7 +200,7 @@ export default function DocumentEditor({
                         type="text"
                         value={field.value}
                         onChange={(e) => handleFieldChange(section.id, field.id, e.target.value)}
-                        className="flex-1 px-3 py-1.5 rounded border border-slate-300 bg-white focus:border-emerald-500 focus:outline-none"
+                        className="flex-1 px-3 py-1.5 rounded border border-slate-300 bg-white focus:border-brass focus:outline-none"
                       />
                     </div>
                   ))}
@@ -226,10 +226,10 @@ export default function DocumentEditor({
             <h4 className="text-sm font-bold text-white">{activeTooltipDefect.title}</h4>
             <p className="text-xs text-red-400 font-mono">{activeTooltipDefect.citation}</p>
             <p className="text-xs text-slate-200">{activeTooltipDefect.plainEnglishExplanation}</p>
-            <p className="text-xs text-emerald-200">{activeTooltipDefect.recommendedDefense}</p>
+            <p className="text-xs text-brass-bright">{activeTooltipDefect.recommendedDefense}</p>
             <button
               onClick={() => setActiveTooltipDefect(null)}
-              className="px-4 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-xs font-semibold"
+              className="px-4 py-1.5 bg-brass text-ink rounded-lg text-xs font-semibold"
             >
               Understood
             </button>

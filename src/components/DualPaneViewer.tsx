@@ -35,7 +35,7 @@ export default function DualPaneViewer({
             <button
               onClick={() => setViewMode('split')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                viewMode === 'split' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'
+                viewMode === 'split' ? 'bg-slate-800 text-brass' : 'text-slate-400 hover:text-white'
               }`}
             >
               <Columns className="w-3.5 h-3.5" />
@@ -45,7 +45,7 @@ export default function DualPaneViewer({
           <button
             onClick={() => setViewMode('editor')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              viewMode === 'editor' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'
+              viewMode === 'editor' ? 'bg-slate-800 text-brass' : 'text-slate-400 hover:text-white'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -55,7 +55,7 @@ export default function DualPaneViewer({
             <button
               onClick={() => setViewMode('scan')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                viewMode === 'scan' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'
+                viewMode === 'scan' ? 'bg-slate-800 text-brass' : 'text-slate-400 hover:text-white'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />

@@ -34,6 +34,7 @@ export default function RedFlagSidebar({
 }: RedFlagSidebarProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
+  const [printWarnings, setPrintWarnings] = useState(true);
 
   const score = ast.audit.defenseViabilityScore;
   const grade = ast.audit.viabilityGrade;
@@ -83,22 +84,22 @@ export default function RedFlagSidebar({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             Defense strength (educational)
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-brass/10 text-brass border border-brass/25 font-semibold">
             Not a court prediction
           </span>
         </div>
 
         <div className="mb-2">
           <div className="text-xl font-extrabold text-white tracking-tight">{bandLabel(band)}</div>
-          <p className="text-xs font-semibold text-emerald-400 mt-1 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <p className="text-xs font-semibold text-brass mt-1 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-brass" />
             {grade}
           </p>
         </div>
 
         <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden mb-3">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+            className="h-full bg-brass rounded-full transition-all duration-500"
             style={{
               width: `${band === 'strong' ? 85 : band === 'moderate' ? 68 : band === 'limited' ? 48 : 28}%`,
             }}
@@ -116,7 +117,7 @@ export default function RedFlagSidebar({
       <div className="space-y-2">
         <button
           onClick={onOpenCounterAction}
-          className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all flex items-center justify-center gap-2 group"
+          className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-brass hover:bg-brass-bright text-ink shadow-lg shadow-brass/20 transition-all flex items-center justify-center gap-2 group"
         >
           <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
           <span>Generate Court Answer</span>
@@ -126,9 +127,9 @@ export default function RedFlagSidebar({
         {onOpenHearingSimulator && (
           <button
             onClick={onOpenHearingSimulator}
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-cyan-300 border border-cyan-500/20 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-ink-2 hover:bg-ink text-brass border border-brass/25 transition-colors flex items-center justify-center gap-2"
           >
-            <Scale className="w-3.5 h-3.5 text-cyan-400" />
+            <Scale className="w-3.5 h-3.5 text-brass" />
             <span>Practice what to say in court</span>
           </button>
         )}
@@ -150,15 +151,25 @@ export default function RedFlagSidebar({
           </button>
 
           <button
-            onClick={() => printLivingDocument(ast)}
-            className="py-2 px-3 rounded-lg text-xs font-medium bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white transition-colors flex items-center justify-center gap-1.5"
+            onClick={() => printLivingDocument(ast, { includeWarnings: printWarnings })}
+            className="py-2 px-3 rounded-lg text-xs font-medium bg-ink-2 border border-brass/25 hover:border-brass/50 text-cream transition-colors flex items-center justify-center gap-1.5"
           >
-            <Printer className="w-3.5 h-3.5 text-emerald-400" />
+            <Printer className="w-3.5 h-3.5 text-brass" />
             <span>Print / Save PDF</span>
           </button>
         </div>
-        <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
-          Editable file = Word (.docx). Print opens a clean page with only the letter — use your browser&apos;s &quot;Save as PDF&quot;.
+        <label className="mt-2 flex items-center gap-2 text-[11px] text-paper cursor-pointer">
+          <input
+            type="checkbox"
+            checked={printWarnings}
+            onChange={(e) => setPrintWarnings(e.target.checked)}
+            className="accent-brass"
+          />
+          Include issue flags on the printout
+        </label>
+        <p className="text-[10px] text-paper/70 mt-1.5 leading-relaxed">
+          Word is the editable file. Print can be a clean letter or the same flags you see on screen — you can
+          also toggle them in the preview.
         </p>
       </div>
 
@@ -166,7 +177,7 @@ export default function RedFlagSidebar({
       {ast.audit.actionSteps?.length > 0 && (
         <div className="pt-2 border-t border-slate-800/60 space-y-3">
           <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-            <ListChecks className="w-4 h-4 text-emerald-400" />
+            <ListChecks className="w-4 h-4 text-brass" />
             What to do next
           </span>
           <div className="space-y-2">
@@ -240,7 +251,7 @@ export default function RedFlagSidebar({
               <div className="flex items-center justify-between pt-1 border-t border-slate-900">
                 <button
                   onClick={() => onSelectDefect(defect.id)}
-                  className="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium"
+                  className="text-[11px] text-brass hover:text-brass-bright font-medium"
                 >
                   Highlight in Canvas
                 </button>
@@ -251,8 +262,8 @@ export default function RedFlagSidebar({
                 >
                   {copiedId === defect.id ? (
                     <>
-                      <Check className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
+                      <Check className="w-3 h-3 text-brass" />
+                      <span className="text-brass">Copied</span>
                     </>
                   ) : (
                     <>

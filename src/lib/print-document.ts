@@ -65,12 +65,20 @@ function printHtmlDocument(html: string): void {
   window.setTimeout(safeCleanup, 90_000);
 }
 
-const PRINT_CHROME = `
+function printChrome(opts?: { flagsToggle?: boolean; flagsOn?: boolean }): string {
+  const toggle = opts?.flagsToggle
+    ? `<label class="warn-toggle">
+        <input type="checkbox" id="show-flags" ${opts.flagsOn ? 'checked' : ''} onchange="document.body.classList.toggle('hide-flags', !this.checked)" />
+        Show issue flags
+      </label>`
+    : '';
+  return `
   <div class="toolbar no-print">
     <p>Print preview · use Save as PDF in the dialog</p>
+    ${toggle}
     <button type="button" onclick="window.print()">Print / Save PDF</button>
-  </div>
-`;
+  </div>`;
+}
 
 const PRINT_CHROME_CSS = `
   .toolbar {
@@ -88,12 +96,19 @@ const PRINT_CHROME_CSS = `
   .toolbar p { margin: 0; font-size: 12px; }
   .toolbar button {
     border: 0;
-    background: #10b981;
-    color: #052e16;
+    background: #c4a46a;
+    color: #0c0d11;
     font-weight: 700;
     padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
+  }
+  .warn-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #e8d7b8;
   }
   @media print {
     .no-print { display: none !important; }
@@ -103,7 +118,11 @@ const PRINT_CHROME_CSS = `
 /**
  * Clean print window for the document editor — text (and optional photo) only, no site chrome.
  */
-export function printLivingDocument(ast: DocumentAST): void {
+export function printLivingDocument(
+  ast: DocumentAST,
+  opts: { includeWarnings?: boolean } = {}
+): void {
+  const includeWarnings = opts.includeWarnings !== false;
   const showCaption =
     Boolean(ast.caption?.courtName?.trim()) && Boolean(ast.caption?.plaintiff?.trim());
 
@@ -141,7 +160,13 @@ export function printLivingDocument(ast: DocumentAST): void {
   const sectionsHtml = ast.sections
     .map((s) => {
       const title = s.title ? `<div class="sec-title">${esc(s.title)}</div>` : '';
-      return `<section>${title}<p>${esc(s.content).replace(/\n/g, '<br/>')}</p></section>`;
+      const defect = ast.defects.find((d) => d.id === s.redFlagId);
+      const body = `<section>${title}<p>${esc(s.content).replace(/\n/g, '<br/>')}</p></section>`;
+      if (!defect) return body;
+      return `<section class="flag">
+        <div class="flag-label">⚠ ${esc(defect.title)}${defect.citation ? ` · ${esc(defect.citation)}` : ''}</div>
+        ${title}<p>${esc(s.content).replace(/\n/g, '<br/>')}</p>
+      </section>`;
     })
     .join('\n');
 
@@ -182,6 +207,21 @@ export function printLivingDocument(ast: DocumentAST): void {
       margin-bottom: 16px;
     }
     section { margin: 0 0 10px; }
+    .flag {
+      border: 1.5px dashed #b91c1c;
+      background: #fff5f5;
+      padding: 8px 10px;
+      margin: 0 0 12px;
+    }
+    .flag-label {
+      font-family: Arial, sans-serif;
+      font-size: 8.5pt;
+      color: #9f1239;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    body.hide-flags .flag { border: none; background: transparent; padding: 0; }
+    body.hide-flags .flag-label { display: none; }
     .sec-title { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
     p { margin: 0; white-space: pre-wrap; word-break: break-word; }
     .meta {
@@ -203,8 +243,8 @@ export function printLivingDocument(ast: DocumentAST): void {
     ${PRINT_CHROME_CSS}
   </style>
 </head>
-<body>
-  ${PRINT_CHROME}
+<body class="${includeWarnings ? '' : 'hide-flags'}">
+  ${printChrome({ flagsToggle: true, flagsOn: includeWarnings })}
   <div class="sheet">
     ${photoHtml}
     <p class="transcript-label">Editable transcript</p>
@@ -316,7 +356,7 @@ export function printCourtAnswer(pleading: CounterPleading): void {
   </style>
 </head>
 <body>
-  ${PRINT_CHROME}
+  ${printChrome()}
   <div class="sheet">
     <div class="banner">
       DRAFT — EDUCATIONAL ONLY — NOT LEGAL ADVICE. Check every fact before signing or filing anything.

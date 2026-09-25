@@ -26,11 +26,11 @@ const LOOP = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#0c0d11] text-slate-100 selection:bg-emerald-500/20 selection:text-emerald-300">
+    <div className="min-h-screen flex flex-col bg-ink text-cream">
       <Navbar />
 
       <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-emerald-500/15 via-teal-500/10 to-cyan-500/10 blur-[120px] pointer-events-none -z-10 rounded-full" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-brass/15 blur-[120px] pointer-events-none -z-10 rounded-full" />
         <div
           className="absolute inset-0 pointer-events-none -z-10 opacity-[0.04]"
           style={{
@@ -42,7 +42,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             <div className="lg:col-span-7 space-y-7">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-brass/10 text-brass border border-brass/25">
                 <BadgeCheck className="w-3.5 h-3.5" />
                 LexHack 2026 · Access to Justice + AI Safety
               </div>
@@ -50,7 +50,7 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-[1.08]">
                   A 3-day rent demand
-                  <span className="block font-docket font-semibold italic text-emerald-300/95 mt-1">
+                  <span className="block font-docket font-semibold italic text-brass-bright mt-1">
                     is often not enough.
                   </span>
                 </h1>
@@ -65,14 +65,14 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
                 <Link
                   href="/studio"
-                  className="px-6 py-3.5 rounded-2xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 flex items-center justify-center gap-2"
+                  className="px-6 py-3.5 rounded-2xl font-semibold text-sm bg-brass hover:bg-brass-bright text-ink flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   Open NYC demo
                 </Link>
                 <Link
                   href="/auditor"
-                  className="px-6 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-xl shadow-violet-500/15 flex items-center justify-center gap-2 group"
+                  className="px-6 py-3.5 rounded-2xl font-bold text-sm bg-ink-2 border border-brass/40 text-brass-bright flex items-center justify-center gap-2 group"
                 >
                   <ShieldAlert className="w-4 h-4" />
                   Audit ChatGPT advice
@@ -82,7 +82,7 @@ export default function LandingPage() {
                   href="/simulator"
                   className="px-6 py-3.5 rounded-2xl font-semibold text-sm bg-slate-900 border border-slate-700 text-slate-200 flex items-center justify-center gap-2"
                 >
-                  <Gavel className="w-4 h-4 text-cyan-400" />
+                  <Gavel className="w-4 h-4 text-brass" />
                   Hearing practice
                 </Link>
               </div>
@@ -90,7 +90,7 @@ export default function LandingPage() {
 
             <div className="lg:col-span-5">
               <div className="relative">
-                <div className="absolute -inset-3 rounded-[28px] bg-emerald-500/10 blur-2xl pointer-events-none" />
+                <div className="absolute -inset-3 rounded-[28px] bg-brass/10 blur-2xl pointer-events-none" />
                 <div className="relative rounded-[22px] bg-[#f4efe4] text-[#1c1917] shadow-2xl shadow-black/40 border border-[#e2d6c2] overflow-hidden rotate-[1.2deg] hover:rotate-0 transition-transform duration-500">
                   <div className="px-5 py-3 bg-[#2a2118] text-[#f4efe4] flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Kings County · Housing Part</span>
@@ -128,9 +128,9 @@ export default function LandingPage() {
               <Link
                 key={step.n}
                 href={step.href}
-                className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-emerald-500/30 transition-colors text-left"
+                className="p-4 rounded-2xl bg-ink-2 border border-brass/15 hover:border-brass/40 transition-colors text-left"
               >
-                <span className="font-mono text-[11px] text-emerald-400/90">{step.n}</span>
+                <span className="font-mono text-[11px] text-brass">{step.n}</span>
                 <p className="text-sm font-bold text-white mt-1">{step.title}</p>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">{step.detail}</p>
               </Link>
@@ -227,12 +227,12 @@ export default function LandingPage() {
 
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-emerald-500/30 relative overflow-hidden">
+          <div className="p-8 sm:p-12 rounded-3xl bg-ink-2 border border-brass/25 relative overflow-hidden">
             <div className="absolute right-8 top-8 opacity-10 pointer-events-none">
-              <Scale className="w-40 h-40 text-emerald-300" />
+              <Scale className="w-40 h-40 text-brass" />
             </div>
             <div className="max-w-2xl space-y-4 relative z-10">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brass/10 text-brass border border-brass/25">
                 <Users className="w-3.5 h-3.5" />
                 Access to Justice gap
               </div>
@@ -245,7 +245,7 @@ export default function LandingPage() {
               </p>
               <Link
                 href="/studio"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-slate-950"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-brass text-ink"
               >
                 Try the NYC eviction demo
                 <ArrowRight className="w-4 h-4" />

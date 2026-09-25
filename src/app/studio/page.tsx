@@ -258,11 +258,11 @@ export default function StudioPage() {
 
   if (step === 'pick') {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-ink text-cream">
         <Navbar />
         <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-14 space-y-8">
           <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-brass/10 text-brass border border-brass/25">
               <Scale className="w-3.5 h-3.5" />
               No API key needed · works in your browser
             </div>
@@ -279,9 +279,9 @@ export default function StudioPage() {
           <TrustStrip />
 
           {savedCase && (
-            <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div className="p-4 rounded-2xl bg-brass/10 border border-brass/30 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
               <div className="flex items-start gap-3">
-                <History className="w-5 h-5 text-cyan-300 shrink-0 mt-0.5" />
+                <History className="w-5 h-5 text-brass shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-white">Continue where you left off</p>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -292,7 +292,7 @@ export default function StudioPage() {
               <div className="flex gap-2">
                 <button
                   onClick={resumeSaved}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-cyan-400 text-slate-950"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-brass text-slate-950"
                 >
                   Open saved case
                 </button>
@@ -342,7 +342,7 @@ export default function StudioPage() {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {s.id === 'nyc-eviction-14day-defect' && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brass text-slate-950">
                           Judges start here
                         </span>
                       )}
@@ -358,7 +358,7 @@ export default function StudioPage() {
                     {s.jurisdiction}
                   </p>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs text-emerald-400 font-semibold">{s.band}</span>
+                    <span className="text-xs text-brass font-semibold">{s.band}</span>
                     <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
                   </div>
                 </button>
@@ -373,11 +373,11 @@ export default function StudioPage() {
           </div>
 
           {/* B — Own document */}
-          <section className="p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-emerald-500/20 space-y-4">
+          <section className="p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-brass/25 space-y-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-300/90">Option B</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-brass-bright/90">Option B</p>
               <h2 className="text-xl font-bold text-white mt-0.5 flex items-center gap-2">
-                <ClipboardPaste className="w-5 h-5 text-emerald-400" />
+                <ClipboardPaste className="w-5 h-5 text-brass" />
                 Check my own notice
               </h2>
               <p className="text-xs text-slate-400 mt-1">
@@ -386,7 +386,7 @@ export default function StudioPage() {
               </p>
             </div>
             {extractNote && (
-              <p className="text-[11px] text-cyan-300/90 flex items-center gap-1.5">
+              <p className="text-[11px] text-brass-bright/90 flex items-center gap-1.5">
                 <Camera className="w-3.5 h-3.5" />
                 {extractNote}
               </p>
@@ -397,7 +397,7 @@ export default function StudioPage() {
               onChange={(e) => setPasteText(e.target.value)}
               rows={8}
               placeholder="Paste the text of your eviction notice, lease, or demand letter here…"
-              className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 leading-relaxed"
+              className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brass leading-relaxed"
             />
             <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-2">
@@ -409,7 +409,7 @@ export default function StudioPage() {
                     }
                     runAnalysis({ rawText: pasteText });
                   }}
-                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl text-sm font-bold bg-brass text-ink flex items-center gap-2"
                 >
                   <Wand2 className="w-4 h-4" />
                   Check my document
@@ -418,7 +418,7 @@ export default function StudioPage() {
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800 border border-slate-700 text-slate-200 flex items-center gap-2"
                 >
-                  <Camera className="w-4 h-4 text-cyan-400" />
+                  <Camera className="w-4 h-4 text-brass" />
                   Photo / Word / .txt
                 </button>
                 <input
@@ -431,7 +431,7 @@ export default function StudioPage() {
               </div>
               <Link
                 href="/auditor"
-                className="text-xs text-violet-300 hover:text-violet-200 flex items-center gap-1.5"
+                className="text-xs text-brass hover:text-brass-bright flex items-center gap-1.5"
               >
                 <Shield className="w-3.5 h-3.5" />
                 Or check ChatGPT advice instead →
@@ -455,15 +455,15 @@ export default function StudioPage() {
 
   if (step === 'analyzing') {
     return (
-      <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-ink text-cream">
         <Navbar />
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md w-full space-y-8 text-center">
             <div className="relative mx-auto w-24 h-24">
-              <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-ping" />
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5">
+              <div className="absolute inset-0 rounded-full bg-brass/10 animate-ping" />
+              <div className="relative w-24 h-24 rounded-full bg-brass p-0.5">
                 <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-                  <Scale className="w-10 h-10 text-emerald-400" />
+                  <Scale className="w-10 h-10 text-brass" />
                 </div>
               </div>
             </div>
@@ -480,7 +480,7 @@ export default function StudioPage() {
                 <div
                   key={s}
                   className={`flex items-center gap-3 text-sm ${
-                    i < analysisStep ? 'text-emerald-400' : i === analysisStep ? 'text-white' : 'text-slate-600'
+                    i < analysisStep ? 'text-brass' : i === analysisStep ? 'text-white' : 'text-slate-600'
                   }`}
                 >
                   {i < analysisStep ? (
@@ -501,7 +501,7 @@ export default function StudioPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-ink text-cream">
       <Navbar />
       <main className="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
@@ -514,7 +514,7 @@ export default function StudioPage() {
             </button>
             <div>
               <h1 className="text-base font-bold text-white flex items-center gap-2">
-                <FileText className="w-4 h-4 text-emerald-400" />
+                <FileText className="w-4 h-4 text-brass" />
                 {currentAST.title}
               </h1>
               <p className="text-xs text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -525,7 +525,7 @@ export default function StudioPage() {
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                     caseKind === 'practice'
                       ? 'bg-amber-500/10 text-amber-200 border-amber-500/25'
-                      : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
+                      : 'bg-brass/10 text-brass-bright border-brass/25'
                   }`}
                 >
                   {caseKind === 'practice' ? 'Practice example' : 'Your document'}
@@ -540,7 +540,7 @@ export default function StudioPage() {
           <Link
             href="/simulator"
             onClick={() => persistStudioCase(currentAST)}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/20 text-xs font-semibold flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl bg-ink-2 hover:bg-ink text-brass border border-brass/25 text-xs font-semibold flex items-center gap-1.5"
           >
             <Scale className="w-3.5 h-3.5" />
             Practice what to say in court

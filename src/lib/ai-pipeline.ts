@@ -352,7 +352,7 @@ export async function simulateHearingTurn(
       const { text, model } = await groqChatJson({
         apiKey: groqKey,
         system:
-          'You are a Housing Court judge running a live calendar. React to THIS tenant utterance only. Never reuse a stock line. Output only valid JSON.',
+          'You are a Housing Court judge on the bench. judgeReply is YOUR spoken line from the bench — never the tenant. Never start with "Your Honor". Never say "I request" or "I move". Address Tenant or Counsel. Output only valid JSON.',
         user: prompt,
         models: GROQ_TEXT_MODELS,
         temperature: 0.75,
@@ -475,8 +475,10 @@ THE TENANT JUST SAID (react to these exact words):
 ${userResponse}
 <<<END>>>
 
-How to speak:
-- 1–3 spoken sentences as a real judge: interrupt, ask one follow-up, or put something on the record.
+How to speak (judgeReply):
+- You ARE the judge. Speak from the bench in 1–3 sentences.
+- NEVER start with "Your Honor". NEVER write as the tenant.
+- Address "Tenant" or "Counsel". Interrupt, ask one follow-up, or put something on the record.
 - Quote or paraphrase a phrase they used so the reply is obviously about THIS turn.
 - If they raise RPAPL 711 / 14 days: ask landlord counsel to produce the demand, then ask how it was served.
 - If they raise heat/water/habitability: ask dates, photos, written notice, HPD — do not jump to a 14-day lecture unless they brought it up.

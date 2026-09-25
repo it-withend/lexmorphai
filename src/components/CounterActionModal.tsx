@@ -118,9 +118,9 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-md shadow-emerald-500/20">
+            <div className="w-10 h-10 rounded-xl bg-brass p-0.5 shadow-md shadow-brass/20">
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Scale className="w-5 h-5 text-emerald-400" />
+                <Scale className="w-5 h-5 text-brass" />
               </div>
             </div>
             <div>
@@ -129,7 +129,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                 <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-mono">
                   DRAFT · CHECK EVERY FACT BEFORE SIGNING
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-brass/10 text-brass border border-brass/25 font-mono">
                   EDUCATIONAL · NOT LEGAL ADVICE
                 </span>
               </h3>
@@ -151,7 +151,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-950/40">
           {isLoading ? (
             <div className="p-16 text-center space-y-3">
-              <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
+              <div className="w-10 h-10 border-4 border-brass/30 border-t-brass rounded-full animate-spin mx-auto"></div>
               <p className="text-sm font-medium text-slate-300">
                 Building your Answer draft from the issues we found…
               </p>
@@ -171,13 +171,13 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                   <div className="col-span-7 pr-3 border-r border-slate-300 font-sans">
                     <div className="font-bold text-slate-900">{pleading.caption.plaintiff}</div>
                     <div className="italic text-slate-500 my-1">-against-</div>
-                    <div className="font-bold text-emerald-950 bg-emerald-100/60 p-1 rounded">
+                    <div className="font-bold text-ink bg-[#f3ead8] p-1 rounded">
                       {pleading.caption.defendant}
                     </div>
                   </div>
                   <div className="col-span-5 pl-3 flex flex-col justify-center font-sans text-xs">
                     <div className="font-bold text-slate-900">Index No. {pleading.caption.indexNumber}</div>
-                    <div className="text-emerald-800 font-semibold mt-1 uppercase text-[11px]">
+                    <div className="text-[#7c6a4f] font-semibold mt-1 uppercase text-[11px]">
                       {pleading.title}
                     </div>
                   </div>
@@ -195,7 +195,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
               {/* Affirmative Defenses Toggles */}
               <div className="space-y-3">
                 <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileCheck className="w-4 h-4 text-emerald-400" />
+                  <FileCheck className="w-4 h-4 text-brass" />
                   <span>Affirmative Defenses Asserted ({pleading.affirmativeDefenses.filter((d) => d.selected).length})</span>
                 </span>
 
@@ -206,12 +206,12 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                       onClick={() => toggleDefense(def.id)}
                       className={`p-4 rounded-xl border transition-all cursor-pointer text-xs ${
                         def.selected
-                          ? 'bg-slate-900 border-emerald-500/50 shadow-sm'
+                          ? 'bg-slate-900 border-brass/50 shadow-sm'
                           : 'bg-slate-950/40 border-slate-800 text-slate-500'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 text-emerald-400">
+                        <div className="mt-0.5 text-brass">
                           {def.selected ? (
                             <CheckSquare className="w-4 h-4" />
                           ) : (
@@ -221,7 +221,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white">{def.defenseName}</span>
-                            <span className="font-mono text-[10px] text-emerald-400">
+                            <span className="font-mono text-[10px] text-brass">
                               [{def.statutoryBasis}]
                             </span>
                           </div>
@@ -280,7 +280,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
                   {!isSigned ? (
                     <button
                       onClick={handleSignPleading}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                      className="px-4 py-2 bg-brass hover:bg-brass-bright text-ink text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-brass/20"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Mark draft reviewed (demo only)</span>
@@ -318,7 +318,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
               <Link
                 href="/simulator"
                 onClick={() => persistStudioCase(ast, pleading)}
-                className="px-4 py-2 bg-cyan-500/15 border border-cyan-500/30 text-cyan-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 hover:bg-cyan-500/25"
+                className="px-4 py-2 bg-brass/15 border border-brass/30 text-brass-bright text-xs font-semibold rounded-xl flex items-center gap-1.5 hover:bg-brass/25"
               >
                 <Gavel className="w-3.5 h-3.5" />
                 Practice this Answer in Hearing Coach
@@ -340,7 +340,7 @@ export default function CounterActionModal({ isOpen, onClose, ast }: CounterActi
             <button
               onClick={handleExportDocx}
               disabled={isExporting}
-              className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+              className="px-5 py-2 bg-brass hover:bg-brass-bright text-ink text-xs font-bold rounded-xl transition-all shadow-lg shadow-brass/20 flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               <span>{isExporting ? 'Generating Word…' : '1. Download Answer (.docx)'}</span>

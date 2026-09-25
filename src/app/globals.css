@@ -1,13 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070b12;
-  --foreground: #e8eef6;
+  --background: #0c0d11;
+  --foreground: #f3ead8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: #0c0d11;
+  --color-ink-2: #14130f;
+  --color-brass: #c4a46a;
+  --color-brass-bright: #e8d7b8;
+  --color-cream: #f3ead8;
+  --color-paper: #b7ae9c;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-docket);
@@ -17,6 +23,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(196, 164, 106, 0.28);
+  color: #f3ead8;
 }
 
 .font-docket {
