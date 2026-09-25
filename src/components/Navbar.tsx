@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Shield,
   Sparkles,
@@ -18,6 +19,7 @@ type AiStatus = {
 };
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [showDev, setShowDev] = useState(false);
   const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
 
@@ -75,29 +77,27 @@ export default function Navbar() {
           </div>
 
           <nav className="flex items-center gap-1 sm:gap-2">
-            <Link
-              href="/studio"
-              className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"
-            >
-              <FileText className="w-4 h-4 text-emerald-400" />
-              <span>Studio</span>
-            </Link>
-
-            <Link
-              href="/simulator"
-              className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"
-            >
-              <Scale className="w-4 h-4 text-cyan-400" />
-              <span className="hidden sm:inline">Hearing</span>
-            </Link>
-
-            <Link
-              href="/auditor"
-              className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors flex items-center gap-1.5"
-            >
-              <Shield className="w-4 h-4 text-violet-400" />
-              <span className="hidden sm:inline">Auditor</span>
-            </Link>
+            {[
+              { href: '/studio', label: 'Studio', Icon: FileText, color: 'text-emerald-400' },
+              { href: '/simulator', label: 'Hearing', Icon: Scale, color: 'text-cyan-400' },
+              { href: '/auditor', label: 'Auditor', Icon: Shield, color: 'text-violet-400' },
+            ].map(({ href, label, Icon, color }) => {
+              const active = pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    active
+                      ? 'bg-slate-800 text-white'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${color}`} />
+                  <span className="hidden sm:inline">{label}</span>
+                </Link>
+              );
+            })}
 
             <button
               onClick={() => setShowDev(true)}

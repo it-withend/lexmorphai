@@ -340,9 +340,16 @@ export default function StudioPage() {
                     <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${s.iconWrap}`}>
                       <s.Icon className="w-5 h-5" />
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.badge}`}>
-                      {s.issues} issues flagged
-                    </span>
+                    <div className="flex flex-col items-end gap-1">
+                      {s.id === 'nyc-eviction-14day-defect' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                          Judges start here
+                        </span>
+                      )}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.badge}`}>
+                        {s.issues} issues flagged
+                      </span>
+                    </div>
                   </div>
                   <p className="font-bold text-white text-base mt-3">{s.title}</p>
                   <p className="text-slate-400 text-sm mt-0.5">{s.subtitle}</p>

@@ -18,16 +18,14 @@ import {
   FileText,
   Mic2,
   BadgeCheck,
-  Download,
   AlertTriangle,
   Info,
 } from 'lucide-react';
 
-const HERO_STATS = [
-  { icon: FileCheck, label: 'Notice check', detail: 'Plain English' },
-  { icon: Mic2, label: 'Court practice', detail: 'Hearing coach' },
-  { icon: ShieldAlert, label: 'Chatbot audit', detail: 'Catch bad advice' },
-  { icon: Download, label: 'Answer draft', detail: 'Word (.docx)' },
+const LOOP = [
+  { n: '01', href: '/studio', title: 'Read the notice', detail: 'Flag 3-day demands, illegal fees, void clauses.' },
+  { n: '02', href: '/simulator', title: 'Say it in court', detail: 'Rehearse the 14-day rule before a practice judge.' },
+  { n: '03', href: '/auditor', title: 'Catch bad AI', detail: 'Stop “skip court” chatbot advice before anyone acts.' },
 ] as const;
 
 export default function LandingPage() {
@@ -45,100 +43,101 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <BadgeCheck className="w-3.5 h-3.5" />
-            LexHack 2026 · Access to Justice + AI Safety
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+            <div className="lg:col-span-7 space-y-7">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <BadgeCheck className="w-3.5 h-3.5" />
+                LexHack 2026 · Access to Justice + AI Safety
+              </div>
 
-          <div className="space-y-4 max-w-4xl mx-auto">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1]">
-              LexMorph{' '}
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-                Defense Studio
-              </span>
-            </h1>
-            <p className="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Spot problems in a housing notice, practice what to say in court, and catch dangerous ChatGPT
-              “legal advice” before anyone acts on it. Educational — not a lawyer.
-            </p>
-          </div>
+              <div className="space-y-4">
+                <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-[1.08]">
+                  A 3-day rent demand
+                  <span className="block font-docket font-semibold italic text-emerald-300/95 mt-1">
+                    is often not enough.
+                  </span>
+                </h1>
+                <p className="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed">
+                  Spot problems in a housing notice, practice what to say in court, and catch dangerous
+                  ChatGPT “legal advice” before anyone acts on it. Educational — not a lawyer.
+                </p>
+              </div>
 
-          <div className="max-w-3xl mx-auto">
-            <TrustStrip compact />
-          </div>
+              <TrustStrip compact />
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-            <Link
-              href="/auditor"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-xl shadow-violet-500/20 flex items-center justify-center gap-2 group"
-            >
-              <ShieldAlert className="w-4 h-4" />
-              Audit ChatGPT advice
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href="/studio"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 flex items-center justify-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              Open Defense Studio
-            </Link>
-            <Link
-              href="/simulator"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-semibold text-sm bg-slate-900 border border-slate-700 text-slate-200 flex items-center justify-center gap-2"
-            >
-              <Gavel className="w-4 h-4 text-cyan-400" />
-              Hearing practice
-            </Link>
-          </div>
-
-          <div className="max-w-3xl mx-auto pt-2">
-            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-left space-y-3">
-              <p className="text-xs font-semibold text-amber-200 flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                Got a notice? Three one-click starts
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
                 <Link
                   href="/studio"
-                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-amber-500/40"
+                  className="px-6 py-3.5 rounded-2xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 flex items-center justify-center gap-2"
                 >
-                  <span className="font-semibold text-white block">NYC demo</span>
-                  Open Studio → Eviction Notice
-                </Link>
-                <Link
-                  href="/studio"
-                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-emerald-500/40"
-                >
-                  <span className="font-semibold text-white block">Paste text</span>
-                  Analyze your notice in Studio
+                  <Sparkles className="w-4 h-4" />
+                  Open NYC demo
                 </Link>
                 <Link
                   href="/auditor"
-                  className="px-3 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 hover:border-violet-500/40"
+                  className="px-6 py-3.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-xl shadow-violet-500/15 flex items-center justify-center gap-2 group"
                 >
-                  <span className="font-semibold text-white block">Audit ChatGPT</span>
-                  Catch unsafe “skip court” advice
+                  <ShieldAlert className="w-4 h-4" />
+                  Audit ChatGPT advice
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
+                <Link
+                  href="/simulator"
+                  className="px-6 py-3.5 rounded-2xl font-semibold text-sm bg-slate-900 border border-slate-700 text-slate-200 flex items-center justify-center gap-2"
+                >
+                  <Gavel className="w-4 h-4 text-cyan-400" />
+                  Hearing practice
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="relative">
+                <div className="absolute -inset-3 rounded-[28px] bg-emerald-500/10 blur-2xl pointer-events-none" />
+                <div className="relative rounded-[22px] bg-[#f4efe4] text-[#1c1917] shadow-2xl shadow-black/40 border border-[#e2d6c2] overflow-hidden rotate-[1.2deg] hover:rotate-0 transition-transform duration-500">
+                  <div className="px-5 py-3 bg-[#2a2118] text-[#f4efe4] flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em]">Kings County · Housing Part</span>
+                    <span className="text-[10px] font-mono text-amber-200">LT-304928-26</span>
+                  </div>
+                  <div className="px-6 py-5 space-y-3">
+                    <p className="font-docket text-[11px] uppercase tracking-[0.2em] text-[#7c6a4f]">
+                      Notice to tenant
+                    </p>
+                    <h2 className="font-docket text-xl leading-snug font-semibold">
+                      Demand for rent — pay within{' '}
+                      <span className="line-through decoration-red-600 decoration-2 text-red-800/80">three (3) days</span>
+                    </h2>
+                    <p className="text-xs text-[#5c5346] leading-relaxed">
+                      Metropolitan Realty Holdings · 418 Atlantic Avenue, Apt 4B · Brooklyn
+                    </p>
+                    <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
+                      <AlertTriangle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-900 leading-relaxed">
+                        <strong>Flagged:</strong> NY nonpayment usually needs a written{' '}
+                        <span className="font-docket italic">fourteen-day</span> demand — RPAPL § 711(2).
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-[#8a7d68]">
+                      Practice example · educational only · not a court filing
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-800/80 text-left">
-            {HERO_STATS.map(({ icon: Icon, label, detail }) => (
-              <div
-                key={detail}
-                className="p-3.5 rounded-2xl bg-slate-900/40 border border-slate-800/60 flex items-start gap-3"
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-4xl mt-12">
+            {LOOP.map((step) => (
+              <Link
+                key={step.n}
+                href={step.href}
+                className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-emerald-500/30 transition-colors text-left"
               >
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div>
-                  <span className="text-lg font-extrabold text-white font-mono block leading-tight">{label}</span>
-                  <span className="text-xs text-slate-400">{detail}</span>
-                </div>
-              </div>
+                <span className="font-mono text-[11px] text-emerald-400/90">{step.n}</span>
+                <p className="text-sm font-bold text-white mt-1">{step.title}</p>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{step.detail}</p>
+              </Link>
             ))}
           </div>
         </div>
@@ -147,7 +146,9 @@ export default function LandingPage() {
       <section className="py-12 bg-slate-900/30 border-y border-slate-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Three tools. One defense loop.</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-docket">
+              Three tools. One defense loop.
+            </h2>
             <p className="text-sm text-slate-400">
               Built for tenants who face landlords — and chatbots — without a lawyer.
             </p>

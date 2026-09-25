@@ -277,8 +277,15 @@ export default function HearingSimulator() {
 
       <div
         ref={transcriptRef}
-        className="min-h-[480px] max-h-[600px] overflow-y-auto p-4 sm:p-6 bg-slate-950/60 rounded-3xl border border-slate-800/80 space-y-6"
+        className="min-h-[480px] max-h-[600px] overflow-y-auto rounded-3xl border border-[#3d3226] bg-[#16110d] space-y-6"
       >
+        <div className="sticky top-0 z-10 px-4 sm:px-6 py-3 bg-[#2a2118] border-b border-[#4a3c2c] flex items-center justify-between gap-3">
+          <p className="font-docket text-[11px] uppercase tracking-[0.16em] text-[#e8d7b8]">
+            {scenario.jurisdiction} · practice calendar
+          </p>
+          <p className="text-[10px] font-mono text-amber-200/80">Not a real courtroom</p>
+        </div>
+        <div className="px-4 sm:px-6 pb-6 space-y-6">
         {turns.map((turn) => {
           const isJudge = turn.speaker === 'judge';
           return (
@@ -289,7 +296,7 @@ export default function HearingSimulator() {
                     <div className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
                       <Scale className="w-3.5 h-3.5" />
                     </div>
-                    <span className="text-amber-300">Practice judge</span>
+                    <span className="text-amber-200">Practice judge</span>
                   </>
                 ) : (
                   <>
@@ -304,8 +311,8 @@ export default function HearingSimulator() {
               <div
                 className={`max-w-2xl p-4 sm:p-5 rounded-2xl text-sm leading-relaxed ${
                   isJudge
-                    ? 'bg-slate-900 border border-slate-800 text-slate-100'
-                    : 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-100'
+                    ? 'bg-[#f3ead8] text-[#1c1610] border border-[#d9c9a8] font-docket'
+                    : 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-50'
                 }`}
               >
                 {turn.text}
@@ -344,30 +351,34 @@ export default function HearingSimulator() {
         })}
 
         {isSubmitting && (
-          <div className="flex items-center gap-2 text-xs text-slate-400 pl-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <div className="flex items-center gap-2 text-xs text-amber-200/80 pl-2">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
             Coach is reviewing your argument…
           </div>
         )}
+        </div>
       </div>
 
       <div className="space-y-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-          Recommended arguments for this scenario
+          Try a recommended line — then add your own
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {scenario.quickAnswers.map((sampleText, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleSend(sampleText)}
-              disabled={isSubmitting}
-              className="p-3 text-left rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-xs text-slate-300 leading-snug disabled:opacity-50"
-            >
-              &quot;{sampleText.slice(0, 100)}
-              {sampleText.length > 100 ? '…' : ''}&quot;
-            </button>
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSend(sampleText)}
+                disabled={isSubmitting}
+                title={sampleText}
+                className="p-3 text-left rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 disabled:opacity-50"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
+                  {scenario.quickLabels[idx] || `Argument ${idx + 1}`}
+                </span>
+                <p className="text-xs text-slate-300 leading-snug mt-1 line-clamp-3">{sampleText}</p>
+              </button>
           ))}
         </div>
       </div>

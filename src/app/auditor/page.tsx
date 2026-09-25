@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import TrustStrip from '@/components/TrustStrip';
 import SiteFooter from '@/components/SiteFooter';
-import { AdviceAuditResult } from '@/lib/types';
+import { AdviceAuditResult, AdviceSafetyFlag } from '@/lib/types';
 import { SAMPLE_BAD_ADVICE_PACKS } from '@/lib/advice-audit';
 import Link from 'next/link';
 import {
@@ -21,6 +21,40 @@ import {
   Info,
   BadgeCheck,
 } from 'lucide-react';
+
+function FlagCard({
+  flag,
+  tone,
+}: {
+  flag: AdviceSafetyFlag;
+  tone: AdviceSafetyFlag['severity'];
+}) {
+  const bar =
+    tone === 'critical'
+      ? 'border-l-red-400 bg-red-950/30'
+      : tone === 'warning'
+        ? 'border-l-amber-400 bg-slate-950'
+        : 'border-l-slate-500 bg-slate-950';
+  return (
+    <div className={`p-3 rounded-xl border border-slate-800 border-l-2 ${bar} space-y-1.5 text-xs`}>
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-semibold text-slate-100">{flag.title}</span>
+        <span
+          className={`uppercase text-[10px] font-mono ${
+            tone === 'critical' ? 'text-red-300' : tone === 'warning' ? 'text-amber-300' : 'text-slate-400'
+          }`}
+        >
+          {flag.severity}
+        </span>
+      </div>
+      {flag.excerpt ? <p className="text-slate-500 font-mono text-[11px]">“{flag.excerpt}”</p> : null}
+      <p className="text-slate-400 leading-relaxed">{flag.explanation}</p>
+      <p className="text-emerald-300/90 leading-relaxed">
+        <strong className="text-emerald-400">Safer:</strong> {flag.saferAlternative}
+      </p>
+    </div>
+  );
+}
 
 const RISK_STYLES: Record<string, string> = {
   critical: 'text-red-400 bg-red-500/10 border-red-500/30',
@@ -100,33 +134,6 @@ export default function AdviceAuditorPage() {
 
         <TrustStrip />
 
-        <div className="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/25 text-xs text-violet-100/90 leading-relaxed flex gap-3">
-          <BadgeCheck className="w-5 h-5 text-violet-300 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-white">Built-in safety tests (for judges &amp; builders)</p>
-            <p className="mt-1 text-violet-100/80">
-              Deterministic mini-eval: <strong className="text-white">25/25</strong> labeled chatbot-style
-              cases · 100% must-hit recall · 0 false positives on the watch list ·{' '}
-              <strong className="text-white">47</strong> known-good citations. Rules cannot be removed by the
-              LLM (safety floor).
-            </p>
-            <p className="mt-1 text-[11px] text-violet-200/70">
-              Details: repo file <code className="text-violet-100">docs/ADVICE_AUDITOR_EVAL.md</code> · run{' '}
-              <code className="text-violet-100">npm run eval:auditor</code>
-            </p>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800 text-[11px] text-slate-400 leading-relaxed flex gap-2">
-          <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-          <p>
-            <strong className="text-slate-300">About law citations:</strong> we mark them as{' '}
-            <em>known</em>, <em>not in our list</em>, or <em>odd format</em>. We never call something “fake”
-            automatically. If we find nothing, that does <strong className="text-slate-300">not</strong> mean
-            the advice is safe — always double-check with legal aid.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4 p-5 rounded-3xl bg-slate-900/50 border border-slate-800">
             <label className="block space-y-1.5">
@@ -198,6 +205,17 @@ export default function AdviceAuditorPage() {
               Built-in danger checks always run. When our server AI is on, you also get a clearer rewrite — you
               do not need your own key.
             </p>
+
+            <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-100/85 leading-relaxed">
+              <p className="font-semibold text-white flex items-center gap-1.5">
+                <BadgeCheck className="w-3.5 h-3.5" />
+                Safety floor for judges
+              </p>
+              <p className="mt-1">
+                Mini-eval 25/25 · rules cannot be removed by the LLM · citations marked known / not listed /
+                odd format — never auto-“fake”.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -259,19 +277,33 @@ export default function AdviceAuditorPage() {
                       mean the advice is safe. Verify every citation and next step yourself.
                     </p>
                   ) : (
-                    result.flags.map((f) => (
-                      <div key={f.id} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-semibold text-slate-100">{f.title}</span>
-                          <span className="uppercase text-[10px] font-mono text-red-300">{f.severity}</span>
-                        </div>
-                        <p className="text-slate-500 font-mono text-[11px]">“{f.excerpt}”</p>
-                        <p className="text-slate-400 leading-relaxed">{f.explanation}</p>
-                        <p className="text-emerald-300/90 leading-relaxed">
-                          <strong className="text-emerald-400">Safer:</strong> {f.saferAlternative}
-                        </p>
-                      </div>
-                    ))
+                    <>
+                      {result.flags
+                        .filter((f) => f.severity === 'critical')
+                        .map((f) => (
+                          <FlagCard key={f.id} flag={f} tone="critical" />
+                        ))}
+                      {result.flags.some((f) => f.severity !== 'critical') && (
+                        <details className="group">
+                          <summary className="cursor-pointer text-xs text-slate-400 hover:text-slate-200 list-none flex items-center justify-between py-1">
+                            <span>
+                              {result.flags.filter((f) => f.severity !== 'critical').length} more flags
+                              (warnings &amp; notes)
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wider text-slate-500 group-open:hidden">
+                              Show
+                            </span>
+                          </summary>
+                          <div className="mt-2 space-y-3">
+                            {result.flags
+                              .filter((f) => f.severity !== 'critical')
+                              .map((f) => (
+                                <FlagCard key={f.id} flag={f} tone={f.severity} />
+                              ))}
+                          </div>
+                        </details>
+                      )}
+                    </>
                   )}
                 </div>
 

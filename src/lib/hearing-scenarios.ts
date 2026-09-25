@@ -10,6 +10,7 @@ export interface HearingScenario {
   caseContext: string;
   judgeOpening: string;
   quickAnswers: string[];
+  quickLabels: [string, string, string];
   tips: { title: string; body: string }[];
 }
 
@@ -30,6 +31,7 @@ export const HEARING_SCENARIOS: HearingScenario[] = [
       'Your Honor, I also raise breach of the warranty of habitability under RPL § 235-b — no heat or hot water for weeks — and request an HPD inspection and rent abatement.',
       'Your Honor, the petition includes late charges and legal fees as rent. Under RPL § 238-a and RPAPL § 702 those are not collectible as rent in this proceeding, and I ask they be stricken.',
     ],
+    quickLabels: ['14-day notice', 'Habitability', 'Strike late fees'],
     tips: [
       {
         title: 'Raise jurisdiction first',
@@ -61,6 +63,7 @@ export const HEARING_SCENARIOS: HearingScenario[] = [
       'Your Honor, I ask the Court to order an expedited HPD inspection so there is an official record of the conditions, not only my testimony.',
       'Your Honor, I notified the landlord in writing about the outages. I can show texts and photos. I am not refusing to pay forever — I am asking the Court to reduce rent for the uninhabitable period.',
     ],
+    quickLabels: ['Abatement %', 'HPD inspection', 'Written notice'],
     tips: [
       {
         title: 'Ask for a percentage',
@@ -92,6 +95,7 @@ export const HEARING_SCENARIOS: HearingScenario[] = [
       'Your Honor, AB 12 limits most residential deposits to one month’s rent. The charged deposit exceeds that cap, and I ask that the overcharge be refunded.',
       'Your Honor, the lease also tries to waive jury trial rights. I contend that waiver is void as against public policy and should not be enforced.',
     ],
+    quickLabels: ['§ 1950.5 deposit', 'Deposit cap', 'Jury waiver'],
     tips: [
       {
         title: 'Name the code section',
