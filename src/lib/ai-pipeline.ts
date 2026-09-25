@@ -352,14 +352,14 @@ export async function simulateHearingTurn(
       const { text, model } = await groqChatJson({
         apiKey: groqKey,
         system:
-          'You are an NYC/CA housing-court style judge coach. Be specific to the case context. Output only valid JSON.',
+          'You are a Housing Court judge running a live calendar. React to THIS tenant utterance only. Never reuse a stock line. Output only valid JSON.',
         user: prompt,
         models: GROQ_TEXT_MODELS,
-        temperature: 0.35,
-        maxTokens: 1200,
+        temperature: 0.75,
+        maxTokens: 1600,
       });
-      const parsed = JSON.parse(text);
-      return { ...parsed, model };
+      const parsed = JSON.parse(cleanLocalJson(text));
+      return { ...normalizeHearingTurn(parsed), model };
     } catch (e) {
       console.warn('[LexMorph] Groq simulation failed:', e);
     }
@@ -374,7 +374,7 @@ export async function simulateHearingTurn(
         config: { responseMimeType: 'application/json' },
       });
       const text = response.text?.trim() || '';
-      return { ...JSON.parse(cleanJson(text)), model: 'gemini-2.5-flash' };
+      return { ...normalizeHearingTurn(JSON.parse(cleanJson(text))), model: 'gemini-2.5-flash' };
     } catch (e) {
       console.warn('[LexMorph] Gemini simulation failed:', e);
     }
@@ -426,34 +426,72 @@ Output valid JSON with this schema:
 }`;
 }
 
+function normalizeHearingTurn(parsed: unknown): {
+  score: number;
+  praise: string;
+  criticism: string;
+  suggestedLegalRefinement: string;
+  judgeReply: string;
+} {
+  const o = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
+  const asText = (v: unknown, fallback: string, max: number) =>
+    (typeof v === 'string' && v.trim() ? v.trim() : fallback).slice(0, max);
+  const scoreRaw = Number(o.score);
+  return {
+    score: Number.isFinite(scoreRaw) ? Math.max(1, Math.min(100, Math.round(scoreRaw))) : 62,
+    praise: asText(o.praise, 'You answered the court.', 600),
+    criticism: asText(o.criticism, 'Name the statute and the exact remedy you want.', 600),
+    suggestedLegalRefinement: asText(o.suggestedLegalRefinement, '', 800),
+    judgeReply: asText(
+      o.judgeReply || o.judge_reply,
+      'I heard you. Counsel, I will hear you next — tenant, stay on one issue and tell me the statute.',
+      900
+    ),
+  };
+}
+
 function buildSimulationPrompt(
   history: Array<{ speaker: string; text: string }>,
   userResponse: string,
   caseContext: string
 ): string {
   const safeHistory = Array.isArray(history) ? history : [];
-  return `You are a Housing Court coach helping a pro se tenant rehearse. Educational only — not legal advice.
+  const lastJudge = [...safeHistory].reverse().find((h) => h.speaker === 'judge')?.text || '';
+  const tenantTurns = safeHistory.filter((h) => h.speaker === 'user').length;
+  return `You are Judge Alvarez, Housing Part, a busy calendar. Educational rehearsal only — not legal advice. Never guarantee who wins.
 
-CASE + GROUND TRUTH:
+CASE FACTS + GROUND TRUTH:
 ${caseContext}
 
-Conversation so far:
+Turn ${tenantTurns + 1} of this hearing.
+Last thing YOU (the judge) said — do NOT repeat it:
+${lastJudge || '(you just called the case)'}
+
+Full conversation:
 ${safeHistory.map((h) => `${h.speaker.toUpperCase()}: ${h.text}`).join('\n') || '(start of hearing)'}
 
-Tenant's response: "${userResponse}"
+THE TENANT JUST SAID (react to these exact words):
+<<<TENANT>>>
+${userResponse}
+<<<END>>>
 
-RULES:
-- Never affirm that a 3-day NY rent demand is valid for nonpayment; RPAPL § 711(2) requires ≥14 days.
-- Prefer specific statute citations from the case context.
-- If the tenant is wrong on the notice period, score ≤40 and correct them.
-- Never guarantee win/dismissal percentages.
+How to speak:
+- 1–3 spoken sentences as a real judge: interrupt, ask one follow-up, or put something on the record.
+- Quote or paraphrase a phrase they used so the reply is obviously about THIS turn.
+- If they raise RPAPL 711 / 14 days: ask landlord counsel to produce the demand, then ask how it was served.
+- If they raise heat/water/habitability: ask dates, photos, written notice, HPD — do not jump to a 14-day lecture unless they brought it up.
+- If they mention fees: ask for an itemized breakdown.
+- If they are vague, cut them off and demand a statute + a remedy in one sentence.
+- If they are wrong that a 3-day NY nonpayment demand is enough: score ≤40 and correct toward RPAPL § 711(2) (14 days).
+- Never copy a prior judge line. Never use the same follow-up twice.
 
+Also coach the tenant (separate from the spoken line):
 Return JSON only:
 {
   "score": <1-100>,
-  "praise": "What they did right",
-  "criticism": "What to improve",
-  "suggestedLegalRefinement": "Exact better phrasing to use",
-  "judgeReply": "Your next realistic judicial question or ruling"
+  "praise": "what they did right this turn, citing their words",
+  "criticism": "one concrete improvement",
+  "suggestedLegalRefinement": "one better sentence they could say next",
+  "judgeReply": "the NEW spoken judicial line"
 }`;
 }

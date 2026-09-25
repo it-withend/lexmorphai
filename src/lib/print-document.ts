@@ -9,16 +9,113 @@ function esc(s: string): string {
 }
 
 /**
+ * Print without relying on window.open('', ...) + noopener.
+ * That combo leaves a blank about:blank tab and never fires onload.
+ */
+function printHtmlDocument(html: string): void {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('title', 'Print preview');
+  iframe.setAttribute('aria-label', 'Print preview');
+  Object.assign(iframe.style, {
+    position: 'fixed',
+    inset: '0',
+    width: '100%',
+    height: '100%',
+    border: '0',
+    zIndex: '2147483646',
+    background: '#fff',
+  });
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    iframe.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const triggerPrint = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch {
+      /* print dialog can be cancelled */
+    }
+  };
+
+  let cleaned = false;
+  const safeCleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    cleanup();
+  };
+
+  iframe.onload = () => {
+    window.setTimeout(triggerPrint, 250);
+  };
+  iframe.src = url;
+
+  const afterPrint = () => {
+    window.removeEventListener('afterprint', afterPrint);
+    window.setTimeout(safeCleanup, 200);
+  };
+  window.addEventListener('afterprint', afterPrint);
+  // If they never print, don't leave a covering iframe forever
+  window.setTimeout(safeCleanup, 90_000);
+}
+
+const PRINT_CHROME = `
+  <div class="toolbar no-print">
+    <p>Print preview · use Save as PDF in the dialog</p>
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+  </div>
+`;
+
+const PRINT_CHROME_CSS = `
+  .toolbar {
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #111827;
+    color: #e5e7eb;
+    position: sticky;
+    top: 0;
+  }
+  .toolbar p { margin: 0; font-size: 12px; }
+  .toolbar button {
+    border: 0;
+    background: #10b981;
+    color: #052e16;
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  @media print {
+    .no-print { display: none !important; }
+  }
+`;
+
+/**
  * Clean print window for the document editor — text (and optional photo) only, no site chrome.
  */
 export function printLivingDocument(ast: DocumentAST): void {
   const showCaption =
     Boolean(ast.caption?.courtName?.trim()) && Boolean(ast.caption?.plaintiff?.trim());
 
-  const photoHtml = ast.originalImageUrl
+  const photoSrc = ast.originalImageUrl
+    ? ast.originalImageUrl.startsWith('http')
+      ? ast.originalImageUrl
+      : `${window.location.origin}${ast.originalImageUrl.startsWith('/') ? '' : '/'}${ast.originalImageUrl}`
+    : '';
+  const photoHtml = photoSrc
     ? `<div class="photo-wrap">
         <p class="badge">Original scan (if provided)</p>
-        <img src="${ast.originalImageUrl}" alt="Original document scan" />
+        <img src="${esc(photoSrc)}" alt="Original document scan" />
       </div>`
     : '';
 
@@ -64,7 +161,7 @@ export function printLivingDocument(ast: DocumentAST): void {
       color: #111;
       background: #fff;
     }
-    .sheet { max-width: 800px; margin: 0 auto; }
+    .sheet { max-width: 800px; margin: 0 auto; padding: 18px; }
     .badge {
       font-family: Arial, sans-serif;
       font-size: 9pt;
@@ -103,9 +200,11 @@ export function printLivingDocument(ast: DocumentAST): void {
       margin: 0 0 12px;
       text-transform: uppercase;
     }
+    ${PRINT_CHROME_CSS}
   </style>
 </head>
 <body>
+  ${PRINT_CHROME}
   <div class="sheet">
     ${photoHtml}
     <p class="transcript-label">Editable transcript</p>
@@ -113,22 +212,10 @@ export function printLivingDocument(ast: DocumentAST): void {
     ${sectionsHtml}
     <div class="meta">LexMorph Defense Studio · ${esc(ast.jurisdiction)} · Not legal advice</div>
   </div>
-  <script>
-    window.onload = function () {
-      setTimeout(function () { window.print(); }, 300);
-    };
-  </script>
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1100');
-  if (!win) {
-    alert('Please allow pop-ups to print / save PDF.');
-    return;
-  }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  printHtmlDocument(html);
 }
 
 /**
@@ -182,7 +269,7 @@ export function printCourtAnswer(pleading: CounterPleading): void {
       color: #111;
       background: #fff;
     }
-    .sheet { max-width: 7.5in; margin: 0 auto; }
+    .sheet { max-width: 7.5in; margin: 0 auto; padding: 18px; }
     .banner {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 8pt;
@@ -225,9 +312,11 @@ export function printCourtAnswer(pleading: CounterPleading): void {
     @media print {
       .banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
+    ${PRINT_CHROME_CSS}
   </style>
 </head>
 <body>
+  ${PRINT_CHROME}
   <div class="sheet">
     <div class="banner">
       DRAFT — EDUCATIONAL ONLY — NOT LEGAL ADVICE. Check every fact before signing or filing anything.
@@ -242,7 +331,7 @@ export function printCourtAnswer(pleading: CounterPleading): void {
       </div>
       <div class="index">
         <strong>Index No. ${esc(pleading.caption.indexNumber || '')}</strong><br/>
-        ${esc(pleading.caption.documentTitle || pleading.title || 'VERIFIED ANSWER')}
+        ${esc(pleading.caption.documentTitle || pleading.title || 'ANSWER DRAFT')}
       </div>
     </div>
 
@@ -270,21 +359,8 @@ export function printCourtAnswer(pleading: CounterPleading): void {
 
     <div class="meta">LexMorph Defense Studio · Court Answer draft · Not a filed pleading</div>
   </div>
-  <script>
-    window.onload = function () {
-      setTimeout(function () { window.print(); }, 250);
-    };
-  </script>
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1100');
-  if (!win) {
-    alert('Please allow pop-ups to print / save PDF.');
-    return;
-  }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  printHtmlDocument(html);
 }
-

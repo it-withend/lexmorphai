@@ -11,12 +11,8 @@ import {
   ArrowRight,
   ShieldAlert,
   FileCheck,
-  CheckCircle2,
   Users,
-  Shield,
   Gavel,
-  FileText,
-  Mic2,
   BadgeCheck,
   AlertTriangle,
   Info,
@@ -30,7 +26,7 @@ const LOOP = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-emerald-500/20 selection:text-emerald-300">
+    <div className="min-h-screen flex flex-col bg-[#0c0d11] text-slate-100 selection:bg-emerald-500/20 selection:text-emerald-300">
       <Navbar />
 
       <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
@@ -143,92 +139,60 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-12 bg-slate-900/30 border-y border-slate-800/60">
+      <section className="py-14 bg-[#0e0d0b] border-y border-[#2a261c]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-docket">
-              Three tools. One defense loop.
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#f3ead8] font-docket">
+              One file. Three rooms.
             </h2>
-            <p className="text-sm text-slate-400">
-              Built for tenants who face landlords — and chatbots — without a lawyer.
+            <p className="text-sm text-[#b7ae9c]">
+              Clerk&apos;s desk, courtroom calendar, then a second look at the chatbot — in that order.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-3xl bg-slate-950 border border-violet-500/30 space-y-4 md:order-first">
-              <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-white">Advice Auditor · AI Safety</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Chatbots sometimes tell people to skip court or invent laws. Paste that advice here — we flag
-                dangerous tips and suggest a safer rewrite. No API key needed.
-              </p>
-              <div className="text-[11px] text-violet-300/90 space-y-1">
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Catches “skip court” / suspicious-format cites
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Honest about pattern limits
-                </p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 md:divide-x md:divide-[#2a261c]">
+            {[
+              {
+                n: '01',
+                href: '/studio',
+                Icon: FileCheck,
+                title: 'Defense Studio',
+                body: 'Read a notice like a clerk would — 3-day demands, illegal fees, void clauses — then draft an Answer you can edit.',
+                cta: 'Open the NYC file',
+              },
+              {
+                n: '02',
+                href: '/simulator',
+                Icon: Scale,
+                title: 'Hearing Coach',
+                body: 'Say it out loud to a practice judge who answers this turn — not a canned script. Coaching only, not a win prediction.',
+                cta: 'Step up to the calendar',
+              },
+              {
+                n: '03',
+                href: '/auditor',
+                Icon: ShieldAlert,
+                title: 'Advice Auditor',
+                body: 'Paste what ChatGPT told you. We mark skip-court and overconfident lines, then put a safer rewrite beside them.',
+                cta: 'Audit skip-court advice',
+              },
+            ].map((card) => (
               <Link
-                href="/auditor"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+                key={card.n}
+                href={card.href}
+                className="group p-6 md:px-7 bg-[#12110e] first:rounded-l-3xl last:rounded-r-3xl border border-[#2a261c] md:border-y md:border-x-0 first:md:border-l last:md:border-r hover:bg-[#18160f] transition-colors"
               >
-                <Shield className="w-3.5 h-3.5" /> Open Auditor <ArrowRight className="w-3 h-3" />
+                <div className="flex items-center justify-between mb-5">
+                  <span className="font-docket text-[#c4a46a] text-2xl">{card.n}</span>
+                  <card.Icon className="w-5 h-5 text-[#c4a46a]/80" />
+                </div>
+                <h3 className="text-lg font-docket text-[#f3ead8]">{card.title}</h3>
+                <p className="text-sm text-[#b7ae9c] leading-relaxed mt-2 min-h-[4.5rem]">{card.body}</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#e8d7b8] mt-4 group-hover:gap-2.5 transition-all">
+                  {card.cta} <ArrowRight className="w-3.5 h-3.5" />
+                </span>
               </Link>
-            </div>
-
-            <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-white">Defense Studio</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Practice cases or your own notice (paste / photo / Word). Flag common problems in plain English,
-                draft an Answer template, export Word. Not a guarantee the court will accept it.
-              </p>
-              <div className="text-[11px] text-emerald-300/90 space-y-1">
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Plain-English issue flags
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Answer draft (.docx)
-                </p>
-              </div>
-              <Link
-                href="/studio"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
-              >
-                <FileText className="w-3.5 h-3.5" /> Open Studio <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-
-            <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
-              <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                <Scale className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-white">Hearing Coach</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Practice speaking in Housing Court. Get feedback on what to say before you face a real judge —
-                coaching only, not a prediction of who wins.
-              </p>
-              <div className="text-[11px] text-cyan-300/90 space-y-1">
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Oral argument practice
-                </p>
-                <p className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Case context from Studio
-                </p>
-              </div>
-              <Link
-                href="/simulator"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 hover:text-cyan-300"
-              >
-                <Mic2 className="w-3.5 h-3.5" /> Open Coach <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
+            ))}
           </div>
         </div>
       </section>

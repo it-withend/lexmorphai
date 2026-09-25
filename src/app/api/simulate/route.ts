@@ -68,12 +68,7 @@ function applyNoticeGuardrails(
       criticism:
         result.criticism ||
         'Keep the record on the 14-day written demand. A short-day notice is not a valid NY nonpayment predicate.',
-      suggestedLegalRefinement:
-        'Your Honor, Petitioner served only a short-day demand. Under RPAPL § 711(2), a written rent demand of no less than fourteen days is required; I move to dismiss for lack of a valid predicate notice.',
-      judgeReply:
-        result.judgeReply.includes('711')
-          ? result.judgeReply
-          : 'That jurisdictional point is on the record. Counselor, produce the predicate notice. Tenant, anything else before I hear the landlord?',
+      // Keep the model's spoken line — only patch coaching, not the judge's voice.
     };
   }
 
@@ -137,25 +132,31 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Smart heuristic fallback
+    // Smart heuristic fallback — quote the tenant so it never sounds canned
     const lower = userResponse.toLowerCase();
+    const snippet = userResponse.replace(/\s+/g, ' ').trim().slice(0, 90);
+    const turn = history.filter((h) => h.speaker === 'user').length;
     let score = 70;
-    let praise = 'You identified yourself clearly and spoke respectfully to the court.';
-    let criticism = 'Be sure to explicitly cite the controlling statute by number.';
+    let praise = `You spoke up: “${snippet}${userResponse.length > 90 ? '…' : ''}.”`;
+    let criticism = 'Name the statute and the exact remedy you want in one sentence.';
     let suggestedLegalRefinement =
       'Your Honor, I move to dismiss this proceeding for lack of jurisdiction because Petitioner failed to serve a valid 14-day written demand as required by RPAPL § 711(2).';
     let judgeReply =
-      'I see. Counselor, do you have a copy of the rent demand you served? And tenant, did you receive this notice by certified mail or personal service?';
+      turn <= 1
+        ? `I heard you say “${snippet}${userResponse.length > 90 ? '…' : ''}.” Counsel, I will come to you. Tenant, what statute are you relying on, and what do you want me to do today?`
+        : `Stay with that last point. You said “${snippet}${userResponse.length > 90 ? '…' : ''}.” Give me the dates or the document — I will not take a speech.`;
 
     if (lower.includes('14') || lower.includes('711') || lower.includes('jurisdiction') || lower.includes('defect')) {
       score = 96;
       praise =
-        "Excellent. You immediately raised the 14-day notice requirement — that goes directly to the court's jurisdiction over this proceeding.";
+        `You put the notice defect on the record — “${snippet}${userResponse.length > 90 ? '…' : ''}.” That goes to jurisdiction.`;
       criticism = 'Also be prepared to show the exact envelope or affidavit of service, or lack thereof.';
       suggestedLegalRefinement =
         'Under RPAPL § 711(2), an unequivocal written demand for rent of no less than fourteen days is a strict condition precedent. Without it, this court lacks subject matter jurisdiction.';
       judgeReply =
-        'That is a serious jurisdictional defect if true. Counselor, let me see the predicate notice. Tenant, what condition was the apartment in during the alleged arrears period?';
+        turn === 1
+          ? 'Counselor, produce the predicate rent demand now. Tenant, how was it served — personal, conspicuous, or mail?'
+          : 'The 14-day point is on the record. I need service proof next, not a second speech about the same statute.';
     } else if (
       lower.includes('heat') ||
       lower.includes('water') ||

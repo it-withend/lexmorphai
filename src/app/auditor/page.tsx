@@ -56,6 +56,28 @@ function FlagCard({
   );
 }
 
+function highlightAdvice(text: string, flags: AdviceSafetyFlag[]): React.ReactNode {
+  const excerpts = flags
+    .map((f) => f.excerpt.trim())
+    .filter((e) => e && e !== '(entire response)' && e.length >= 6)
+    .sort((a, b) => b.length - a.length);
+
+  if (!excerpts.length) return text;
+
+  const escaped = excerpts.map((e) => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp(`(${escaped.join('|')})`, 'gi');
+  const parts = text.split(re);
+  return parts.map((part, i) => {
+    const hit = excerpts.some((e) => e.toLowerCase() === part.toLowerCase());
+    if (!hit) return <span key={i}>{part}</span>;
+    return (
+      <mark key={i} className="bg-red-500/25 text-red-100 rounded px-0.5">
+        {part}
+      </mark>
+    );
+  });
+}
+
 const RISK_STYLES: Record<string, string> = {
   critical: 'text-red-400 bg-red-500/10 border-red-500/30',
   high: 'text-orange-300 bg-orange-500/10 border-orange-500/30',
@@ -74,16 +96,19 @@ export default function AdviceAuditorPage() {
   const [source, setSource] = useState<string>('');
   const [model, setModel] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [auditedText, setAuditedText] = useState('');
 
   const runAudit = async (sampleId?: string) => {
     setLoading(true);
     setError(null);
     try {
+      let textForHighlight = adviceText;
       if (sampleId) {
         const pack = SAMPLE_BAD_ADVICE_PACKS.find((p) => p.id === sampleId) || SAMPLE_BAD_ADVICE_PACKS[0];
         setSituation(pack.situation);
         setAdviceText(pack.adviceText);
         setJurisdiction(pack.jurisdiction);
+        textForHighlight = pack.adviceText;
       }
       const res = await fetch('/api/audit-advice', {
         method: 'POST',
@@ -100,6 +125,7 @@ export default function AdviceAuditorPage() {
       setResult(data.result);
       setSource(data.source || '');
       setModel(data.model || '');
+      setAuditedText(textForHighlight);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Audit failed');
     } finally {
@@ -307,24 +333,34 @@ export default function AdviceAuditorPage() {
                   )}
                 </div>
 
-                <div className="p-5 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-sm font-bold text-white">Safer educational rewrite</h2>
-                    <button
-                      onClick={copyRewrite}
-                      className="text-[11px] px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                      {copied ? 'Copied' : 'Copy'}
-                    </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-4 rounded-2xl bg-slate-950 border border-red-500/20 space-y-2">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-red-300">What the chatbot said</h2>
+                    <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      {highlightAdvice(auditedText || adviceText, result.flags)}
+                    </p>
                   </div>
-                  <p className="text-[10px] uppercase tracking-wide text-amber-300/90 font-mono">
-                    AI-generated · unverified · not legal advice
-                  </p>
-                  <pre className="whitespace-pre-wrap text-xs text-slate-300 leading-relaxed font-sans">
-                    {result.saferRewrite ||
-                      'No rewrite returned — still treat chatbot advice as unverified. Prefer legal-aid / court self-help materials for your jurisdiction.'}
-                  </pre>
+                  <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/20 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                        Safer educational rewrite
+                      </h2>
+                      <button
+                        onClick={copyRewrite}
+                        className="text-[11px] px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-1"
+                      >
+                        {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        {copied ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <p className="text-[10px] uppercase tracking-wide text-amber-300/90 font-mono">
+                      AI-generated · unverified · not legal advice
+                    </p>
+                    <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      {result.saferRewrite ||
+                        'No rewrite returned — still treat chatbot advice as unverified. Prefer legal-aid / court self-help materials for your jurisdiction.'}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="p-5 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-2">
